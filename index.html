@@ -7,209 +7,178 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #f9f8f4; --surface: #ffffff; --border: rgba(0,0,0,0.12);
-  --border-light: rgba(0,0,0,0.07); --text: #1a1a18;
-  --muted: #6b6b67; --faint: #9b9b97;
-  --keiko: #e05c1a;       /* Fuerza Popular orange */
-  --sanchez: #1a6e30;     /* Juntos por el Perú green */
+  --bg: #f9f8f4; --surface: #ffffff;
+  --border: rgba(0,0,0,0.12); --border-light: rgba(0,0,0,0.07);
+  --text: #1a1a18; --muted: #6b6b67; --faint: #9b9b97;
+  --keiko:   #f57b2d;
+  --sanchez: #48cb50;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1a1a18; --surface: #242422; --border: rgba(255,255,255,0.12);
-    --border-light: rgba(255,255,255,0.07); --text: #e8e6df;
-    --muted: #9b9b97; --faint: #6b6b67;
+    --bg: #1a1a18; --surface: #242422;
+    --border: rgba(255,255,255,0.12); --border-light: rgba(255,255,255,0.07);
+    --text: #e8e6df; --muted: #9b9b97; --faint: #6b6b67;
   }
 }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 10px; font-size: 13px; }
 
 /* ── HEADER ── */
-.hdr { text-align: center; margin-bottom: 10px; }
+.hdr { text-align: center; margin-bottom: 8px; }
 .hdr h1 { font-size: 15px; font-weight: 600; }
 .hdr .byline { font-size: 10px; color: var(--faint); margin-top: 2px; }
 .hdr .byline a { color: var(--text); font-weight: 500; text-decoration: none; }
-.hdr .byline a:hover { text-decoration: underline; }
 
 /* ── RESULTS BAR ── */
-.results-bar {
+.rb {
   background: var(--surface); border: 0.5px solid var(--border);
-  border-radius: 10px; padding: 8px 12px; margin-bottom: 10px;
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  border-radius: 10px; padding: 7px 12px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
 }
-.rb-cand { display: flex; flex-direction: column; min-width: 56px; }
-.rb-cand-left { text-align: left; }
-.rb-cand-right { text-align: right; }
-.rb-label { font-size: 8px; color: var(--faint); text-transform: uppercase; letter-spacing: .04em; }
-.rb-share { font-size: 16px; font-weight: 700; line-height: 1.1; }
-.rb-votes { font-size: 9px; color: var(--muted); }
-.rb-bar-wrap { flex: 1; min-width: 80px; }
-.rb-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--bg); margin-bottom: 3px; }
-.rb-bar-k { height: 100%; background: var(--keiko); transition: width .6s; }
+.rb-cand { display: flex; flex-direction: column; }
+.rb-lbl  { font-size: 8px; color: var(--faint); text-transform: uppercase; letter-spacing: .04em; }
+.rb-pct  { font-size: 16px; font-weight: 700; line-height: 1.1; }
+.rb-vts  { font-size: 9px; color: var(--muted); }
+.rb-mid  { flex: 1; min-width: 60px; }
+.rb-bar  { display: flex; height: 7px; border-radius: 4px; overflow: hidden; background: var(--bg); margin-bottom: 2px; }
+.rb-bar-k { height: 100%; background: var(--keiko);   transition: width .6s; }
 .rb-bar-s { height: 100%; background: var(--sanchez); transition: width .6s; }
-.rb-meta { text-align: center; font-size: 9px; color: var(--faint); }
-.live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #ccc; vertical-align: middle; margin-right: 3px; }
-.live-dot.on { background: #16a34a; animation: pulse 2s infinite; }
+.rb-meta  { text-align: center; font-size: 9px; color: var(--faint); }
+.dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ccc; vertical-align: middle; margin-right: 2px; }
+.dot.on { background: #16a34a; animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
 
 /* ── TABS ── */
-.tabs { display: flex; gap: 4px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap; }
-.tab { font-size: 10px; padding: 3px 11px; border: 0.5px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--surface); color: var(--muted); transition: all .15s; }
+.tabs { display: flex; gap: 4px; justify-content: center; margin-bottom: 8px; flex-wrap: wrap; }
+.tab { font-size: 10px; padding: 3px 11px; border: 0.5px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--surface); color: var(--muted); }
 .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
-.tab:hover:not(.active) { background: var(--border-light); }
 
-/* ── TAB PANELS ── */
 .panel { display: none; }
 .panel.active { display: block; }
 
 /* ── CARD ── */
-.card { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-.card h2 { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
-.card .sub { font-size: 9px; color: var(--muted); margin-bottom: 8px; }
+.card { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+.card-title { font-size: 11px; font-weight: 600; margin-bottom: 1px; }
+.card-sub   { font-size: 8px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
 
-/* ── FORECAST NEEDLE ── */
-.forecast-wrap { max-width: 600px; margin: 0 auto; }
-.fc-header { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 12px; }
-.fc-left { text-align: left; }
-.fc-right { text-align: right; }
-.fc-party-lbl { font-size: 8px; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; }
-.fc-name { font-size: 12px; font-weight: 600; }
-.fc-prob { font-size: 28px; font-weight: 700; line-height: 1; }
-.fc-prob-lbl { font-size: 8px; color: var(--muted); }
-.fc-center { text-align: center; }
-.fc-vs { font-size: 10px; color: var(--faint); }
-.fc-status { font-size: 9px; color: var(--muted); }
-.fc-mesas-cnt { font-size: 8px; color: var(--faint); }
-#needle-wrap { width: 100%; max-width: 480px; margin: 0 auto 10px; }
-.prob-bar-wrap { display: flex; height: 18px; border-radius: 9px; overflow: hidden; border: 0.5px solid var(--border); margin: 8px 0; }
-.pb-k { background: var(--keiko); display: flex; align-items: center; justify-content: center; transition: width .8s cubic-bezier(.4,0,.2,1); }
+/* ── FORECAST ── */
+.fc-wrap { max-width: 580px; margin: 0 auto; }
+.fc-hdr  { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 10px; }
+.fc-l { text-align: left; } .fc-r { text-align: right; } .fc-c { text-align: center; }
+.fc-party { font-size: 8px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
+.fc-name  { font-size: 11px; font-weight: 600; }
+.fc-prob  { font-size: 26px; font-weight: 700; line-height: 1; }
+.fc-plbl  { font-size: 8px; color: var(--muted); }
+.fc-vs    { font-size: 9px; color: var(--faint); }
+.fc-st    { font-size: 9px; color: var(--muted); }
+.fc-mc    { font-size: 8px; color: var(--faint); }
+#needle-wrap { width: 100%; max-width: 460px; margin: 0 auto 8px; }
+.pb-wrap { display: flex; height: 17px; border-radius: 9px; overflow: hidden; border: 0.5px solid var(--border); margin: 6px 0; }
+.pb-k { background: var(--keiko);   display: flex; align-items: center; justify-content: center; transition: width .8s cubic-bezier(.4,0,.2,1); }
 .pb-s { background: var(--sanchez); display: flex; align-items: center; justify-content: center; transition: width .8s cubic-bezier(.4,0,.2,1); }
-.pb-lbl { font-size: 9px; font-weight: 600; color: white; padding: 0 6px; white-space: nowrap; }
-.fc-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-top: 10px; }
-.fc-stat { background: var(--bg); border-radius: 7px; padding: 7px; text-align: center; }
-.fc-stat-val { font-size: 13px; font-weight: 600; }
-.fc-stat-lbl { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 1px; }
-.fc-note { font-size: 9px; color: var(--muted); text-align: center; line-height: 1.5; margin-top: 8px; }
+.pb-l { font-size: 9px; font-weight: 600; color: white; padding: 0 6px; white-space: nowrap; }
+.fc-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; margin-top: 8px; }
+.fc-stat  { background: var(--bg); border-radius: 7px; padding: 6px; text-align: center; }
+.fc-sv { font-size: 12px; font-weight: 600; }
+.fc-sl { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.fc-note { font-size: 9px; color: var(--muted); text-align: center; line-height: 1.5; margin-top: 7px; }
 
 /* ── MAP ── */
-.map-layout { display: grid; grid-template-columns: 1fr 240px; gap: 10px; align-items: start; }
-@media (max-width: 640px) { .map-layout { grid-template-columns: 1fr; } .map-sidebar { display: none; } }
+.map-type-tabs { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 7px; }
+.mtt { font-size: 9px; padding: 2px 8px; border: 0.5px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--surface); color: var(--muted); white-space: nowrap; }
+.mtt.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 
-.map-type-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
-.map-type-tab { font-size: 9px; padding: 2px 9px; border: 0.5px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--surface); color: var(--muted); }
-.map-type-tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.map-layout { display: grid; grid-template-columns: 1fr 220px; gap: 8px; align-items: start; }
+@media (max-width: 620px) { .map-layout { grid-template-columns: 1fr; } .map-sidebar { display: none; } }
 
-#map-container {
+#map-wrap {
   background: var(--surface); border: 0.5px solid var(--border-light);
   border-radius: 10px; overflow: hidden; position: relative;
-  height: calc(100vh - 220px); max-height: 640px;
-  cursor: grab;
+  height: calc(100vh - 200px); max-height: 620px;
+  cursor: grab; user-select: none;
 }
-#map-container:active { cursor: grabbing; }
-#map-container svg#map-svg {
-  width: 100%; height: 100%; display: block;
-  transform-origin: 0 0;
-}
-.zoom-controls {
-  position: absolute; bottom: 10px; right: 10px;
-  display: flex; flex-direction: column; gap: 3px; z-index: 10;
-}
-.zoom-btn {
-  width: 26px; height: 26px; border-radius: 6px;
-  background: var(--surface); border: 0.5px solid var(--border);
-  font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  transition: background .15s;
-}
-.zoom-btn:hover { background: var(--bg); }
+#map-wrap:active { cursor: grabbing; }
+#map-wrap > svg#map-svg { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
 
-#map-tooltip {
-  position: fixed; pointer-events: none; z-index: 200;
-  background: var(--surface); border: 0.5px solid var(--border);
-  border-radius: 8px; padding: 8px 10px; font-size: 10px; line-height: 1.7;
-  max-width: 200px; display: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-}
+.zoom-btns { position: absolute; bottom: 8px; right: 8px; display: flex; flex-direction: column; gap: 2px; z-index: 10; }
+.zb { width: 24px; height: 24px; border-radius: 5px; background: var(--surface); border: 0.5px solid var(--border); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.zb:hover { background: var(--bg); }
+
+#tt { position: fixed; pointer-events: none; z-index: 200; background: var(--surface); border: 0.5px solid var(--border); border-radius: 7px; padding: 7px 9px; font-size: 10px; line-height: 1.7; max-width: 190px; display: none; box-shadow: 0 3px 12px rgba(0,0,0,.12); }
 
 .map-sidebar { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 10px; }
-.ms-title { font-size: 9px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px; }
-.ms-colorbar { height: 9px; border-radius: 4px; margin: 3px 0; }
-.ms-colorbar-lbl { display: flex; justify-content: space-between; font-size: 8px; color: var(--faint); }
-.ms-item { display: flex; align-items: center; gap: 6px; font-size: 9px; color: var(--muted); margin-bottom: 4px; }
-.ms-swatch { width: 14px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.ms-t  { font-size: 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.ms-cb { height: 8px; border-radius: 3px; margin: 2px 0; }
+.ms-cl { display: flex; justify-content: space-between; font-size: 8px; color: var(--faint); }
+.ms-item { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--muted); margin-bottom: 3px; }
+.ms-sw { width: 13px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 .ms-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 0.5px solid var(--border-light); font-size: 9px; }
 .ms-row:last-child { border-bottom: none; }
-.ms-row-name { color: var(--muted); max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-rn { color: var(--muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── MIGRATION ── */
-.mg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 700px; }
-@media (max-width: 560px) { .mg-grid { grid-template-columns: 1fr; } }
-.mg-card { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 10px; }
-.mg-title { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 8px; }
-.mg-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.mg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 680px; }
+@media (max-width: 520px) { .mg-grid { grid-template-columns: 1fr; } }
+.mg-card { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 9px; }
+.mg-t { font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 7px; }
+.mg-row { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
 .mg-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.mg-name { font-size: 9px; color: var(--muted); flex: 0 0 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mg-bar-wrap { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
-.mg-bar { height: 100%; border-radius: 3px; transition: width .5s; }
-.mg-pct { font-size: 9px; color: var(--faint); width: 28px; text-align: right; }
+.mg-nm { font-size: 9px; color: var(--muted); flex: 0 0 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mg-bw { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+.mg-b  { height: 100%; border-radius: 3px; transition: width .5s; }
+.mg-p  { font-size: 9px; color: var(--faint); width: 26px; text-align: right; }
 
-/* ── DEPT TABLE ── */
+/* ── TABLE ── */
 .tbl-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 6px; }
-th { font-weight: 600; color: var(--muted); text-align: left; padding: 4px 6px; border-bottom: 0.5px solid var(--border); font-size: 8px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
-td { padding: 3px 6px; border-bottom: 0.5px solid var(--border-light); }
+table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 5px; }
+th { font-weight: 600; color: var(--muted); text-align: left; padding: 4px 5px; border-bottom: 0.5px solid var(--border); font-size: 8px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+td { padding: 3px 5px; border-bottom: 0.5px solid var(--border-light); }
 tr:hover td { background: var(--bg); }
 
-/* ── NO DATA ── */
-.no-data { background: var(--bg); border: 0.5px dashed var(--border); border-radius: 8px; padding: 14px; text-align: center; font-size: 10px; color: var(--muted); }
-.no-data strong { display: block; font-size: 12px; color: var(--text); margin-bottom: 3px; }
+.no-data { background: var(--bg); border: 0.5px dashed var(--border); border-radius: 7px; padding: 12px; text-align: center; font-size: 10px; color: var(--muted); }
+.no-data strong { display: block; font-size: 11px; color: var(--text); margin-bottom: 2px; }
 
-/* ── MODAL ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 300; display: none; align-items: center; justify-content: center; padding: 16px; }
 .modal-overlay.open { display: flex; }
-.modal-box { background: var(--surface); border-radius: 12px; padding: 16px; max-width: 320px; width: 100%; text-align: center; font-size: 11px; }
+.modal-box { background: var(--surface); border-radius: 12px; padding: 16px; max-width: 300px; width: 100%; text-align: center; font-size: 11px; }
 .modal-close { float: right; cursor: pointer; font-size: 16px; color: var(--muted); }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="hdr">
   <h1>🇵🇪 Segunda Vuelta Perú 2026 — Seguimiento en Vivo</h1>
   <div class="byline">
     Por <a href="https://x.com/KhamaRamaq" target="_blank">Mathieu Rojas</a> ·
     <a href="https://www.linkedin.com/in/mathieu-rojas-egoavil-889a64293/" target="_blank">LinkedIn</a> ·
-    <span style="cursor:pointer;text-decoration:underline;color:var(--muted)" onclick="document.getElementById('yape-modal').classList.add('open')">☕ Yape</span>
+    <span style="cursor:pointer;text-decoration:underline;color:var(--muted)" onclick="document.getElementById('ym').classList.add('open')">☕ Yape</span>
   </div>
 </div>
 
 <!-- RESULTS BAR -->
-<div class="results-bar">
-  <div class="rb-cand rb-cand-left">
-    <div class="rb-label" style="color:var(--keiko)">Fuerza Popular</div>
-    <div class="rb-share" id="rb-k-pct" style="color:var(--keiko)">—</div>
-    <div class="rb-votes" id="rb-k-votes">—</div>
+<div class="rb">
+  <div class="rb-cand">
+    <div class="rb-lbl" style="color:var(--keiko)">Fuerza Popular</div>
+    <div class="rb-pct" id="rb-kp" style="color:var(--keiko)">—</div>
+    <div class="rb-vts" id="rb-kv">—</div>
   </div>
-
-  <div class="rb-bar-wrap">
+  <div class="rb-mid">
     <div class="rb-bar">
-      <div class="rb-bar-k" id="rb-bar-k" style="width:50%"></div>
-      <div class="rb-bar-s" id="rb-bar-s" style="width:50%"></div>
+      <div class="rb-bar-k" id="rb-bk" style="width:50%"></div>
+      <div class="rb-bar-s" id="rb-bs" style="width:50%"></div>
     </div>
     <div class="rb-meta">
-      <span class="live-dot" id="live-dot"></span>
-      <span id="live-label">En espera</span> ·
-      <span id="rb-pct-rep">—</span>% escrutado ·
-      <span id="rb-ts"></span>
+      <span class="dot" id="dot"></span><span id="ll">En espera</span> ·
+      <span id="rb-pr">—</span>% escrutado · <span id="rb-ts"></span>
     </div>
   </div>
-
-  <div class="rb-cand rb-cand-right">
-    <div class="rb-label" style="color:var(--sanchez)">Juntos por el Perú</div>
-    <div class="rb-share" id="rb-s-pct" style="color:var(--sanchez)">—</div>
-    <div class="rb-votes" id="rb-s-votes">—</div>
+  <div class="rb-cand" style="text-align:right">
+    <div class="rb-lbl" style="color:var(--sanchez)">Juntos por el Perú</div>
+    <div class="rb-pct" id="rb-sp" style="color:var(--sanchez)">—</div>
+    <div class="rb-vts" id="rb-sv">—</div>
   </div>
 </div>
 
-<!-- MAIN TABS -->
+<!-- TABS -->
 <div class="tabs">
   <div class="tab active" data-tab="pronostico">Pronóstico</div>
   <div class="tab" data-tab="mapas">Mapas</div>
@@ -217,611 +186,642 @@ tr:hover td { background: var(--bg); }
   <div class="tab" data-tab="departamentos">Departamentos</div>
 </div>
 
-<!-- PRONÓSTICO TAB -->
+<!-- PRONÓSTICO -->
 <div class="panel active" id="panel-pronostico">
-  <div class="card forecast-wrap">
-    <h2>Pronóstico Electoral</h2>
-    <div class="sub">Modelo estadístico · R1 2026 + SV 2021 · Actualización automática</div>
-
-    <div class="fc-header">
-      <div class="fc-left">
-        <div class="fc-party-lbl" style="color:var(--keiko)">Fuerza Popular</div>
-        <div class="fc-name">Keiko Fujimori</div>
-        <div class="fc-prob" id="fc-k-prob" style="color:var(--keiko)">—</div>
-        <div class="fc-prob-lbl">prob. de ganar</div>
-      </div>
-      <div class="fc-center">
-        <div class="fc-vs">vs.</div>
-        <div class="fc-status" id="fc-status">Esperando datos…</div>
-        <div class="fc-mesas-cnt" id="fc-mesas">0 / 92,766 mesas</div>
-      </div>
-      <div class="fc-right">
-        <div class="fc-party-lbl" style="color:var(--sanchez)">Juntos por el Perú</div>
-        <div class="fc-name">Roberto Sánchez</div>
-        <div class="fc-prob" id="fc-s-prob" style="color:var(--sanchez)">—</div>
-        <div class="fc-prob-lbl">prob. de ganar</div>
-      </div>
+<div class="card fc-wrap">
+  <div class="card-title">Pronóstico Electoral</div>
+  <div class="card-sub">Modelo estadístico · R1 2026 + SV 2021 · Se actualiza automáticamente</div>
+  <div class="fc-hdr">
+    <div class="fc-l">
+      <div class="fc-party" style="color:var(--keiko)">Fuerza Popular</div>
+      <div class="fc-name">Keiko Fujimori</div>
+      <div class="fc-prob" id="fc-kp" style="color:var(--keiko)">—</div>
+      <div class="fc-plbl">prob. de ganar</div>
     </div>
-
-    <div id="needle-wrap">
-      <svg viewBox="0 0 500 210" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%"   stop-color="#e05c1a"/>
-            <stop offset="43%"  stop-color="#f0a878"/>
-            <stop offset="50%"  stop-color="#e8e3d8"/>
-            <stop offset="57%"  stop-color="#78b888"/>
-            <stop offset="100%" stop-color="#1a6e30"/>
-          </linearGradient>
-        </defs>
-        <path d="M55,195 A195,195 0 0,1 445,195" fill="none" stroke="#ddd9cf" stroke-width="26" stroke-linecap="round"/>
-        <path d="M55,195 A195,195 0 0,1 445,195" fill="none" stroke="url(#gg)" stroke-width="24" stroke-linecap="round"/>
-        <text x="46"  y="212" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#e05c1a" font-weight="600">KEIKO</text>
-        <text x="454" y="212" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#1a6e30" font-weight="600">SÁNCHEZ</text>
-        <text x="250" y="212" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9"  fill="#9b9b97">50/50</text>
-        <g id="needle-g" transform="rotate(-90,250,195)">
-          <polygon points="250,195 246,58 254,58" fill="#2a2520" opacity=".85"/>
-          <circle cx="250" cy="195" r="8" fill="#2a2520"/>
-          <circle cx="250" cy="195" r="3.5" fill="white"/>
-        </g>
-        <text id="nkp" x="128" y="142" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#e05c1a" font-weight="600">—%</text>
-        <text id="nsp" x="372" y="142" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a6e30" font-weight="600">—%</text>
-        <text id="nmrg" x="250" y="170" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#6b6b67">Esperando resultados…</text>
-      </svg>
+    <div class="fc-c">
+      <div class="fc-vs">vs.</div>
+      <div class="fc-st" id="fc-st">Esperando datos…</div>
+      <div class="fc-mc" id="fc-mc">0 / 92,766 mesas</div>
     </div>
-
-    <div class="prob-bar-wrap">
-      <div class="pb-k" id="pb-k" style="width:50%"><span class="pb-lbl" id="pb-lk"></span></div>
-      <div class="pb-s" id="pb-s" style="width:50%"><span class="pb-lbl" id="pb-ls"></span></div>
+    <div class="fc-r">
+      <div class="fc-party" style="color:var(--sanchez)">Juntos por el Perú</div>
+      <div class="fc-name">Roberto Sánchez</div>
+      <div class="fc-prob" id="fc-sp" style="color:var(--sanchez)">—</div>
+      <div class="fc-plbl">prob. de ganar</div>
     </div>
-
-    <div class="fc-stats">
-      <div class="fc-stat"><div class="fc-stat-val" id="fc-mv">—</div><div class="fc-stat-lbl">Margen (votos)</div></div>
-      <div class="fc-stat"><div class="fc-stat-val" id="fc-mp">—%</div><div class="fc-stat-lbl">Margen (% válido)</div></div>
-      <div class="fc-stat"><div class="fc-stat-val" id="fc-rem">92,766</div><div class="fc-stat-lbl">Mesas pendientes</div></div>
-    </div>
-    <div class="fc-note" id="fc-note">Sin datos ONPE aún. El pronóstico se actualizará automáticamente cuando comiencen a llegar resultados.</div>
   </div>
+  <div id="needle-wrap">
+    <svg viewBox="0 0 500 210" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stop-color="#f57b2d"/>
+          <stop offset="43%"  stop-color="#f9b888"/>
+          <stop offset="50%"  stop-color="#e8e3d8"/>
+          <stop offset="57%"  stop-color="#90d898"/>
+          <stop offset="100%" stop-color="#48cb50"/>
+        </linearGradient>
+      </defs>
+      <path d="M55,195 A195,195 0 0,1 445,195" fill="none" stroke="#ddd9cf" stroke-width="26" stroke-linecap="round"/>
+      <path d="M55,195 A195,195 0 0,1 445,195" fill="none" stroke="url(#gg)" stroke-width="24" stroke-linecap="round"/>
+      <text x="46"  y="212" text-anchor="middle" font-family="system-ui" font-size="10" fill="#f57b2d" font-weight="600">KEIKO</text>
+      <text x="454" y="212" text-anchor="middle" font-family="system-ui" font-size="10" fill="#48cb50" font-weight="600">SÁNCHEZ</text>
+      <text x="250" y="212" text-anchor="middle" font-family="system-ui" font-size="9"  fill="#9b9b97">50/50</text>
+      <g id="ng" transform="rotate(-90,250,195)">
+        <polygon points="250,195 246,58 254,58" fill="#2a2520" opacity=".85"/>
+        <circle cx="250" cy="195" r="8" fill="#2a2520"/>
+        <circle cx="250" cy="195" r="3.5" fill="white"/>
+      </g>
+      <text id="nkp" x="128" y="142" text-anchor="middle" font-family="system-ui" font-size="13" fill="#f57b2d" font-weight="600">—%</text>
+      <text id="nsp" x="372" y="142" text-anchor="middle" font-family="system-ui" font-size="13" fill="#48cb50" font-weight="600">—%</text>
+      <text id="nmg" x="250" y="170" text-anchor="middle" font-family="system-ui" font-size="10" fill="#6b6b67">Esperando resultados…</text>
+    </svg>
+  </div>
+  <div class="pb-wrap">
+    <div class="pb-k" id="pb-k" style="width:50%"><span class="pb-l" id="pb-lk"></span></div>
+    <div class="pb-s" id="pb-s" style="width:50%"><span class="pb-l" id="pb-ls"></span></div>
+  </div>
+  <div class="fc-stats">
+    <div class="fc-stat"><div class="fc-sv" id="fc-mv">—</div><div class="fc-sl">Margen (votos)</div></div>
+    <div class="fc-stat"><div class="fc-sv" id="fc-mp">—%</div><div class="fc-sl">Margen (% válido)</div></div>
+    <div class="fc-stat"><div class="fc-sv" id="fc-rm">92,766</div><div class="fc-sl">Mesas pendientes</div></div>
+  </div>
+  <div class="fc-note" id="fc-nt">Sin datos ONPE aún. El pronóstico se actualizará automáticamente cuando comiencen a llegar resultados.</div>
+</div>
 </div>
 
-<!-- MAPAS TAB -->
+<!-- MAPAS -->
 <div class="panel" id="panel-mapas">
   <div class="map-type-tabs">
-    <div class="map-type-tab active" data-map="runoff">Keiko vs. Sánchez (2ª vuelta)</div>
-    <div class="map-type-tab" data-map="r1">1ª vuelta (referencia)</div>
-    <div class="map-type-tab" data-map="pending">Mesas pendientes</div>
-    <div class="map-type-tab" data-map="growth-k">Keiko vs. 2021</div>
-    <div class="map-type-tab" data-map="growth-s">Sánchez vs. Castillo 2021</div>
+    <div class="mtt active" data-map="runoff">Keiko vs. Sánchez</div>
+    <div class="mtt" data-map="margin">Margen (burbujas)</div>
+    <div class="mtt" data-map="pending">Mesas pendientes</div>
+    <div class="mtt" data-map="r1">1ra Vuelta 2026</div>
+    <div class="mtt" data-map="growth-k">Keiko vs. Keiko 2021</div>
+    <div class="mtt" data-map="growth-s">Sánchez vs. Castillo 2021</div>
   </div>
-
   <div class="map-layout">
-    <div id="map-container">
-      <div class="no-data" id="map-loading" style="margin:20px"><strong>Cargando mapa…</strong></div>
-      <div class="zoom-controls">
-        <button class="zoom-btn" id="zoom-in">+</button>
-        <button class="zoom-btn" id="zoom-out">−</button>
-        <button class="zoom-btn" id="zoom-reset" style="font-size:11px">⊡</button>
+    <div id="map-wrap">
+      <div class="no-data" id="map-loading" style="margin:20px;position:relative;z-index:5"><strong>Cargando mapa…</strong></div>
+      <div class="zoom-btns">
+        <button class="zb" id="zi">+</button>
+        <button class="zb" id="zo">−</button>
+        <button class="zb" id="zr" style="font-size:10px">⊡</button>
       </div>
     </div>
     <div class="map-sidebar">
-      <div class="ms-title" id="sidebar-title">Leyenda</div>
-      <div id="legend-content"></div>
-      <div style="margin-top:10px">
-        <div class="ms-title">Top distritos</div>
-        <div id="top-districts"></div>
+      <div class="ms-t" id="sb-title">Leyenda</div>
+      <div id="sb-legend"></div>
+      <div style="margin-top:9px">
+        <div class="ms-t">Top distritos</div>
+        <div id="sb-top"></div>
       </div>
     </div>
   </div>
-  <div id="map-tooltip"></div>
+  <div id="tt"></div>
 </div>
 
-<!-- FLUJO TAB -->
+<!-- FLUJO -->
 <div class="panel" id="panel-flujo">
-  <div class="card">
-    <h2>Flujo de Votos desde 1ª Vuelta</h2>
-    <div class="sub">Estimación de migración de votos · Basado en correlaciones a nivel de distrito</div>
-    <div class="no-data" id="mg-nodata"><strong>Sin datos de 2ª vuelta aún</strong>Cuando lleguen resultados, estimaremos cómo migran los votos de cada partido.</div>
-    <div class="mg-grid" id="mg-grid" style="display:none;margin-top:10px"></div>
-  </div>
+<div class="card">
+  <div class="card-title">Flujo de Votos desde 1ª Vuelta</div>
+  <div class="card-sub">Estimación de migración · Correlaciones a nivel de distrito</div>
+  <div class="no-data" id="mg-nd"><strong>Sin datos de 2ª vuelta aún</strong>Cuando lleguen resultados estimaremos cómo migran los votos de cada partido.</div>
+  <div class="mg-grid" id="mg-grid" style="display:none;margin-top:8px"></div>
+</div>
 </div>
 
-<!-- DEPARTAMENTOS TAB -->
+<!-- DEPARTAMENTOS -->
 <div class="panel" id="panel-departamentos">
-  <div class="card">
-    <h2>Resultados por Departamento</h2>
-    <div class="sub">Agregado a nivel departamental · 2ª vuelta</div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr>
-          <th>Departamento</th>
-          <th style="color:var(--keiko)">Keiko</th>
-          <th style="color:var(--sanchez)">Sánchez</th>
-          <th>Margen</th>
-          <th>Escrutado</th>
-          <th>Mesas</th>
-        </tr></thead>
-        <tbody id="dept-tbody"><tr><td colspan="6" style="text-align:center;padding:14px;color:var(--faint)">Esperando datos…</td></tr></tbody>
-      </table>
-    </div>
+<div class="card">
+  <div class="card-title">Resultados por Departamento</div>
+  <div class="card-sub">Agregado a nivel departamental · 2ª vuelta</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>Departamento</th>
+        <th style="color:var(--keiko)">Keiko</th>
+        <th style="color:var(--sanchez)">Sánchez</th>
+        <th>Margen</th><th>Escrutado</th><th>Mesas</th>
+      </tr></thead>
+      <tbody id="dept-tb"><tr><td colspan="6" style="text-align:center;padding:12px;color:var(--faint)">Esperando datos…</td></tr></tbody>
+    </table>
   </div>
 </div>
+</div>
 
-<div style="text-align:center;font-size:9px;color:var(--faint);margin-top:10px;padding-bottom:20px">
+<div style="text-align:center;font-size:9px;color:var(--faint);margin-top:6px;padding-bottom:14px">
   Segunda Vuelta Perú 2026 · Datos: <a href="https://resultadoelectoral.onpe.gob.pe" target="_blank" style="color:var(--muted)">ONPE</a> ·
   <a href="https://congresoperu2026.com" target="_blank" style="color:var(--muted)">Ver resultados Congreso →</a>
 </div>
 
-<div class="modal-overlay" id="yape-modal" onclick="this.classList.remove('open')">
+<div class="modal-overlay" id="ym" onclick="this.classList.remove('open')">
   <div class="modal-box" onclick="event.stopPropagation()">
-    <span class="modal-close" onclick="document.getElementById('yape-modal').classList.remove('open')">×</span>
-    <div style="font-size:15px;font-weight:700;margin-bottom:4px">☕ Apoya el proyecto</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Si te es útil, un Yape es siempre bienvenido 🙏</div>
+    <span class="modal-close" onclick="document.getElementById('ym').classList.remove('open')">×</span>
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px">☕ Apoya el proyecto</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:5px">Si te es útil, un Yape es bienvenido 🙏</div>
     <div style="font-size:12px;font-weight:600">Mathieu Rojas</div>
   </div>
 </div>
 
 <script>
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
-const TOTAL_MESAS = 92766;
-const CK = '#e05c1a';   // Keiko — Fuerza Popular
-const CS = '#1a6e30';   // Sánchez — Juntos por el Perú
-const CN = '#d4cfc5';   // No data gray
+// ── CONSTANTS ─────────────────────────────────────────────────────────────────
+const TM = 92766;
+const CK = '#f57b2d';   // Fuerza Popular
+const CS = '#48cb50';   // Juntos por el Perú
+const CN = '#d4cfc5';   // no data
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────────────────────────────
 const S = {
-  r1: null,       // Map<shp_ubigeo, district>
-  r2021: null,    // Map<shp_ubigeo, district>
-  live: null,
-  lByU: null,     // Map<shp_ubigeo, live_district>
+  r1: null, r2021: null, live: null, lByU: null,
+  cents: null,          // centroids map
   activeMap: 'runoff',
   mapLoaded: false,
-  zoom: 1,
-  panX: 0,
-  panY: 0,
+  svgW: 420, svgH: 607, // filled after SVG loads
+  zoom: 1, panX: 0, panY: 0,
 };
 
-// ─── TABS ─────────────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    // Lazy load map when tab is first opened
-    if (tab.dataset.tab === 'mapas' && !S.mapLoaded) loadMap();
-  });
-});
+// ── TABS ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+  if (t.dataset.tab === 'mapas' && !S.mapLoaded) loadMap();
+}));
 
-document.querySelectorAll('.map-type-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.map-type-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    S.activeMap = tab.dataset.map;
-    colorMap();
-  });
-});
+document.querySelectorAll('.mtt').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.mtt').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  S.activeMap = t.dataset.map;
+  renderMap();
+}));
 
-// ─── DATA LOADING ─────────────────────────────────────────────────────────────
-async function loadStatic() {
-  const [r1, r21] = await Promise.all([
+// ── LOAD DATA ─────────────────────────────────────────────────────────────────
+async function init() {
+  const [r1, r21, cents] = await Promise.all([
     fetch('data/r1_districts.json').then(r => r.json()),
     fetch('data/r2021_districts.json').then(r => r.json()),
+    fetch('data/centroids.json').then(r => r.json()),
   ]);
   S.r1    = new Map(r1.filter(d => d.u && d.u !== 'nan').map(d => [d.u, d]));
   S.r2021 = new Map(r21.filter(d => d.u && d.u !== 'nan').map(d => [d.u, d]));
-  console.log(`R1: ${S.r1.size} districts, R2021: ${S.r2021.size} districts`);
+  S.cents = cents;
+  await loadLive();
+  loadMap(); // preload in background
+  setInterval(loadLive, 60000);
 }
 
 async function loadLive() {
   try {
-    const live = await fetch(`data/live.json?t=${Date.now()}`).then(r => r.json());
-    S.live = live;
-    S.lByU = new Map((live.districts || [])
-      .filter(d => d.u && d.u !== 'nan')
-      .map(d => [d.u, d]));
+    const data = await fetch(`data/live.json?t=${Date.now()}`).then(r => r.json());
+    S.live = data;
+    S.lByU = new Map((data.districts || []).filter(d => d.u && d.u !== 'nan').map(d => [d.u, d]));
     updateUI();
-  } catch(e) { /* no live data yet */ }
+  } catch(e) {}
 }
 
 async function loadMap() {
   try {
     const resp = await fetch('data/peru_districts.svg');
-    if (!resp.ok) { showMapFallback(); return; }
+    if (!resp.ok) { mapFallback(); return; }
     const txt = await resp.text();
-    const container = document.getElementById('map-container');
-    document.getElementById('map-loading').remove();
-    container.insertAdjacentHTML('afterbegin', txt);
+    const wrap = document.getElementById('map-wrap');
+    const loading = document.getElementById('map-loading');
+    if (loading) loading.remove();
+    wrap.insertAdjacentHTML('afterbegin', txt);
+    const svg = wrap.querySelector('svg#map-svg');
+    // Read actual SVG dimensions
+    const vb = svg.getAttribute('viewBox').split(' ');
+    S.svgW = parseFloat(vb[2]);
+    S.svgH = parseFloat(vb[3]);
+    // Size SVG to fill container maintaining aspect
+    fitSVG();
     S.mapLoaded = true;
     setupZoom();
     bindTooltip();
-    colorMap();
-    console.log('Map loaded. Districts in SVG:', container.querySelectorAll('#districts path[data-u]').length);
-  } catch(e) {
-    console.error('Map load failed:', e);
-    showMapFallback();
-  }
+    renderMap();
+  } catch(e) { mapFallback(); }
 }
 
-function showMapFallback() {
-  document.getElementById('map-loading').innerHTML =
-    '<strong>Mapa no disponible</strong>Ejecuta generate_map_svg.py para generar data/peru_districts.svg';
-}
-
-// ─── ZOOM & PAN ───────────────────────────────────────────────────────────────
-function setupZoom() {
-  const container = document.getElementById('map-container');
-  const svg = container.querySelector('svg#map-svg');
+function fitSVG() {
+  const wrap = document.getElementById('map-wrap');
+  const svg  = wrap.querySelector('svg#map-svg');
   if (!svg) return;
-
-  function applyTransform() {
-    svg.style.transform = `translate(${S.panX}px, ${S.panY}px) scale(${S.zoom})`;
-  }
-
-  // Scroll wheel zoom
-  container.addEventListener('wheel', e => {
-    e.preventDefault();
-    const rect = container.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const delta = e.deltaY > 0 ? 0.85 : 1.18;
-    const newZoom = Math.min(12, Math.max(1, S.zoom * delta));
-    // Zoom toward mouse position
-    S.panX = mouseX - (mouseX - S.panX) * (newZoom / S.zoom);
-    S.panY = mouseY - (mouseY - S.panY) * (newZoom / S.zoom);
-    S.zoom = newZoom;
-    applyTransform();
-  }, { passive: false });
-
-  // Drag to pan
-  let dragging = false, startX = 0, startY = 0, startPanX = 0, startPanY = 0;
-  container.addEventListener('mousedown', e => {
-    dragging = true; startX = e.clientX; startY = e.clientY;
-    startPanX = S.panX; startPanY = S.panY;
-  });
-  window.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    S.panX = startPanX + (e.clientX - startX);
-    S.panY = startPanY + (e.clientY - startY);
-    applyTransform();
-  });
-  window.addEventListener('mouseup', () => { dragging = false; });
-
-  // Touch pan
-  let lastTouchX = 0, lastTouchY = 0;
-  container.addEventListener('touchstart', e => {
-    if (e.touches.length === 1) { lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY; }
-  });
-  container.addEventListener('touchmove', e => {
-    e.preventDefault();
-    if (e.touches.length === 1) {
-      S.panX += e.touches[0].clientX - lastTouchX;
-      S.panY += e.touches[0].clientY - lastTouchY;
-      lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
-      applyTransform();
-    }
-  }, { passive: false });
-
-  // Zoom buttons
-  document.getElementById('zoom-in').onclick  = () => { S.zoom = Math.min(12, S.zoom * 1.4); applyTransform(); };
-  document.getElementById('zoom-out').onclick = () => { S.zoom = Math.max(1, S.zoom / 1.4); applyTransform(); };
-  document.getElementById('zoom-reset').onclick = () => { S.zoom = 1; S.panX = 0; S.panY = 0; applyTransform(); };
+  const wrapH = wrap.clientHeight || 500;
+  const wrapW = wrap.clientWidth  || 600;
+  const scale = Math.min(wrapW / S.svgW, wrapH / S.svgH);
+  svg.style.width  = (S.svgW * scale) + 'px';
+  svg.style.height = (S.svgH * scale) + 'px';
+  // Center
+  S.panX = (wrapW - S.svgW * scale) / 2;
+  S.panY = (wrapH - S.svgH * scale) / 2;
+  S.zoom = scale;
+  applyTransform();
 }
 
-// ─── RESULTS BAR ─────────────────────────────────────────────────────────────
-function updateResultsBar() {
-  const m = S.live?.meta || {};
-  const has = (m.counted_mesas || 0) > 0;
+function mapFallback() {
+  const el = document.getElementById('map-loading');
+  if (el) el.innerHTML = '<strong>Mapa no disponible</strong>Ejecuta generate_map_svg.py';
+}
+
+// ── ZOOM & PAN ────────────────────────────────────────────────────────────────
+function applyTransform() {
+  const svg = document.querySelector('#map-wrap svg#map-svg');
+  if (svg) svg.style.transform = `translate(${S.panX}px,${S.panY}px) scale(${S.zoom})`;
+}
+
+function setupZoom() {
+  const wrap = document.getElementById('map-wrap');
+  const MIN_ZOOM = 0.3, MAX_ZOOM = 15;
+
+  wrap.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = wrap.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    const delta = e.deltaY > 0 ? 0.83 : 1.20;
+    const nz = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, S.zoom * delta));
+    S.panX = mx - (mx - S.panX) * (nz / S.zoom);
+    S.panY = my - (my - S.panY) * (nz / S.zoom);
+    S.zoom = nz;
+    applyTransform();
+  }, { passive: false });
+
+  let drag = false, sx = 0, sy = 0, spx = 0, spy = 0;
+  wrap.addEventListener('mousedown', e => { drag=true; sx=e.clientX; sy=e.clientY; spx=S.panX; spy=S.panY; });
+  window.addEventListener('mousemove', e => { if (!drag) return; S.panX=spx+(e.clientX-sx); S.panY=spy+(e.clientY-sy); applyTransform(); });
+  window.addEventListener('mouseup', () => drag=false);
+
+  document.getElementById('zi').onclick = () => { S.zoom=Math.min(MAX_ZOOM,S.zoom*1.4); applyTransform(); };
+  document.getElementById('zo').onclick = () => { S.zoom=Math.max(MIN_ZOOM,S.zoom/1.4); applyTransform(); };
+  document.getElementById('zr').onclick = fitSVG;
+}
+
+// ── RESULTS BAR ───────────────────────────────────────────────────────────────
+function updateBar() {
+  const m = S.live?.meta || {}, has = (m.counted_mesas||0) > 0;
   if (!has) return;
-  const kV = m.k_votes || 0, sV = m.s_votes || 0, vl = m.valid_votes || (kV + sV) || 1;
-  const kP = kV / vl * 100, sP = sV / vl * 100;
-  const kBW = kV / (kV + sV + 0.001) * 100;
-  setText('rb-k-pct',   kP.toFixed(1) + '%');
-  setText('rb-k-votes', fmtN(kV) + ' votos');
-  setText('rb-s-pct',   sP.toFixed(1) + '%');
-  setText('rb-s-votes', fmtN(sV) + ' votos');
-  document.getElementById('rb-bar-k').style.width = kBW + '%';
-  document.getElementById('rb-bar-s').style.width = (100 - kBW) + '%';
-  setText('rb-pct-rep', (m.pct_reported || 0).toFixed(1));
-  if (m.timestamp) setText('rb-ts', m.timestamp);
-  document.getElementById('live-dot').classList.add('on');
-  setText('live-label', 'En vivo');
+  const kV=m.k_votes||0, sV=m.s_votes||0, vl=m.valid_votes||(kV+sV)||1;
+  const kP=kV/vl*100, kBW=kV/(kV+sV+.001)*100;
+  set('rb-kp', kP.toFixed(1)+'%'); set('rb-kv', fmt(kV)+' votos');
+  set('rb-sp', (100-kP).toFixed(1)+'%'); set('rb-sv', fmt(sV)+' votos');
+  id('rb-bk').style.width=kBW+'%'; id('rb-bs').style.width=(100-kBW)+'%';
+  set('rb-pr', (m.pct_reported||0).toFixed(1));
+  if (m.timestamp) set('rb-ts', m.timestamp);
+  id('dot').classList.add('on'); set('ll','En vivo');
 }
 
-// ─── FORECAST ─────────────────────────────────────────────────────────────────
-function runForecast() {
-  const m = S.live?.meta || {};
-  const cnt = m.counted_mesas || 0;
-  if (!cnt || !S.r1) return { kP: 50, sP: 50, status: 'sin_datos' };
-  const kV = m.k_votes || 0, sV = m.s_votes || 0, vl = m.valid_votes || (kV + sV) || 1;
-  const kSh = kV / vl, pRep = cnt / TOTAL_MESAS, margin = kV - sV;
-  let aK = 0, aS = 0, variance = 0;
-  for (const [u, r] of S.r1) {
-    const ld = S.lByU?.get(u);
-    const pd = r.tm - (ld?.cm || 0);
-    if (pd <= 0 || r.tv === 0) continue;
-    const avgVV = r.tv / r.tm, pVV = pd * avgVV;
-    let ke;
-    if (ld && (ld.k + ld.s) > 0) { ke = ld.k / (ld.k + ld.s); }
-    else { const rv = r.k + r.s; ke = rv > 0 ? r.k / rv : kSh; }
-    aK += ke * pVV; aS += (1 - ke) * pVV;
-    variance += Math.pow(Math.sqrt(pd) * avgVV * 0.12, 2);
+// ── FORECAST ─────────────────────────────────────────────────────────────────
+function forecast() {
+  const m=S.live?.meta||{}, cnt=m.counted_mesas||0;
+  if (!cnt||!S.r1) return {kP:50,sP:50,status:'sin_datos'};
+  const kV=m.k_votes||0,sV=m.s_votes||0,vl=m.valid_votes||(kV+sV)||1;
+  const kSh=kV/vl, pRep=cnt/TM, margin=kV-sV;
+  let aK=0,aS=0,variance=0;
+  for (const [u,r] of S.r1) {
+    const ld=S.lByU?.get(u), pd=r.tm-(ld?.cm||0);
+    if (pd<=0||r.tv===0) continue;
+    const avg=r.tv/r.tm, pVV=pd*avg;
+    const denom=r.k+r.s;
+    const ke = ld&&(ld.k+ld.s)>0 ? ld.k/(ld.k+ld.s) : (denom>0?r.k/denom:kSh);
+    aK+=ke*pVV; aS+=(1-ke)*pVV;
+    variance+=Math.pow(Math.sqrt(pd)*avg*0.12,2);
   }
-  const sigma = Math.sqrt(variance) * (1 + (1 - pRep) * 0.35) || 1;
-  const z = (margin + (aK - aS)) / sigma;
-  const kP = clamp(Math.round(normalCDF(z) * 100), 1, 99);
-  return { kP, sP: 100 - kP, status: pRep > .5 ? 'alta' : pRep > .1 ? 'moderada' : 'baja',
-    margin, marginPct: margin / vl * 100, sigma };
+  const sigma=Math.sqrt(variance)*(1+(1-pRep)*0.35)||1;
+  const z=(margin+(aK-aS))/sigma;
+  const kP=clamp(Math.round(normalCDF(z)*100),1,99);
+  return {kP,sP:100-kP,status:pRep>.5?'alta':pRep>.1?'moderada':'baja',margin,marginPct:margin/vl*100,sigma};
 }
 
 function updateForecast() {
-  const fc = runForecast();
-  const m = S.live?.meta || {}, has = (m.counted_mesas || 0) > 0;
-  setText('fc-k-prob', fc.kP + '%');
-  setText('fc-s-prob', fc.sP + '%');
-  setText('fc-mesas', `${fmtN(m.counted_mesas || 0)} / ${fmtN(TOTAL_MESAS)} mesas`);
-  setText('fc-status', { sin_datos: 'Esperando resultados…', baja: 'Estimación preliminar', moderada: 'Estimación parcial', alta: 'Alta confianza' }[fc.status] || '');
-  const ang = -90 + (fc.kP / 100) * 180;
-  document.getElementById('needle-g').setAttribute('transform', `rotate(${ang - 90},250,195)`);
-  setText('nkp', fc.kP + '%'); setText('nsp', fc.sP + '%');
-  setText('nmrg', has ? (fc.margin >= 0 ? 'Keiko' : 'Sánchez') + ' +' + fmtN(Math.abs(fc.margin)) + ' votos (' + Math.abs(fc.marginPct).toFixed(2) + '%)' : 'Esperando resultados…');
-  document.getElementById('pb-k').style.width = fc.kP + '%';
-  document.getElementById('pb-s').style.width = fc.sP + '%';
-  setText('pb-lk', fc.kP >= 13 ? fc.kP + '%' : '');
-  setText('pb-ls', fc.sP >= 13 ? fc.sP + '%' : '');
-  setText('fc-mv', has ? (fc.margin >= 0 ? '+' : '') + fmtN(fc.margin) : '—');
-  setText('fc-mp', has ? (fc.marginPct >= 0 ? '+' : '') + fc.marginPct.toFixed(2) + '%' : '—%');
-  setText('fc-rem', fmtN(TOTAL_MESAS - (m.counted_mesas || 0)));
-  const conf = { baja: 'baja confianza', moderada: 'confianza moderada', alta: 'alta confianza' }[fc.status];
-  document.getElementById('fc-note').innerHTML = has
-    ? `Modelo bayesiano · σ ≈ ±${fmtN(Math.round(fc.sigma || 0))} votos · <b>${conf}</b>`
-    : 'Sin datos ONPE aún. El pronóstico se actualizará automáticamente cuando comiencen a llegar resultados.';
+  const fc=forecast(), m=S.live?.meta||{}, has=(m.counted_mesas||0)>0;
+  set('fc-kp',fc.kP+'%'); set('fc-sp',fc.sP+'%');
+  set('fc-mc',`${fmt(m.counted_mesas||0)} / ${fmt(TM)} mesas`);
+  set('fc-st',{sin_datos:'Esperando resultados…',baja:'Estimación preliminar',moderada:'Estimación parcial',alta:'Alta confianza'}[fc.status]||'');
+  id('ng').setAttribute('transform',`rotate(${-90+(fc.kP/100)*180-90},250,195)`);
+  set('nkp',fc.kP+'%'); set('nsp',fc.sP+'%');
+  set('nmg', has?(fc.margin>=0?'Keiko':'Sánchez')+' +'+fmt(Math.abs(fc.margin))+' votos ('+Math.abs(fc.marginPct).toFixed(2)+'%)':'Esperando resultados…');
+  id('pb-k').style.width=fc.kP+'%'; id('pb-s').style.width=fc.sP+'%';
+  set('pb-lk',fc.kP>=13?fc.kP+'%':''); set('pb-ls',fc.sP>=13?fc.sP+'%':'');
+  set('fc-mv',has?(fc.margin>=0?'+':'')+fmt(fc.margin):'—');
+  set('fc-mp',has?(fc.marginPct>=0?'+':'')+fc.marginPct.toFixed(2)+'%':'—%');
+  set('fc-rm',fmt(TM-(m.counted_mesas||0)));
+  const conf={baja:'baja confianza',moderada:'confianza moderada',alta:'alta confianza'}[fc.status];
+  id('fc-nt').innerHTML=has?`Modelo bayesiano · σ≈±${fmt(Math.round(fc.sigma||0))} votos · <b>${conf}</b>`:'Sin datos ONPE aún. El pronóstico se actualizará automáticamente cuando comiencen a llegar resultados.';
 }
 
-// ─── MAP COLORING ─────────────────────────────────────────────────────────────
-function colorMap() {
+// ── MAP RENDER ────────────────────────────────────────────────────────────────
+function renderMap() {
   if (!S.mapLoaded || !S.r1) return;
-  const paths = document.querySelectorAll('#map-svg #districts path[data-u]');
-  console.log(`Coloring ${paths.length} district paths, map type: ${S.activeMap}`);
-  paths.forEach(path => {
+  const type = S.activeMap;
+  const isBubble = type === 'margin' || type === 'pending';
+
+  // Clear existing bubbles
+  const bubbleG = document.getElementById('bubbles');
+  if (bubbleG) bubbleG.innerHTML = '';
+
+  // Color district fills
+  document.querySelectorAll('#map-svg #districts path[data-u]').forEach(path => {
     const u = path.getAttribute('data-u');
-    const r = S.r1.get(u), r21 = S.r2021?.get(u), ld = S.lByU?.get(u);
-    // Set fill directly via style — overrides SVG CSS default
-    path.style.fill = distColor(S.activeMap, r, r21, ld);
+    const r=S.r1.get(u), r21=S.r2021?.get(u), ld=S.lByU?.get(u);
+    if (isBubble) {
+      // For bubble maps, show background as first-round result
+      path.style.fill = distColorR1(r);
+    } else {
+      path.style.fill = distColor(type, r, r21, ld);
+    }
   });
-  renderLegend(S.activeMap);
-  renderTopDists();
+
+  // Draw bubbles
+  if (bubbleG && type === 'margin')   drawMarginBubbles(bubbleG);
+  if (bubbleG && type === 'pending')  drawPendingBubbles(bubbleG);
+
+  renderLegend(type);
+  renderTopDists(type);
 }
 
 function distColor(type, r, r21, ld) {
   if (type === 'runoff') {
-    if (!ld || (ld.k + ld.s) === 0) return CN;
-    return divColor(ld.k / (ld.k + ld.s));
+    if (!ld||(ld.k+ld.s)===0) return CN;
+    return divColor(ld.k/(ld.k+ld.s));
   }
   if (type === 'r1') {
-    if (!r || r.tv === 0) return CN;
-    const denom = r.k + r.s;
-    return denom > 0 ? divColor(r.k / denom) : CN;
-  }
-  if (type === 'pending') {
-    if (!r || r.tm === 0) return CN;
-    const cm = ld?.cm || 0;
-    if (r.tm - cm <= 0) return '#e0ddd5';
-    const pFrac = (r.tm - cm) / r.tm;
-    const denom = r.k + r.s;
-    const kVs = denom > 0 ? r.k / denom : 0.5;
-    return divColor(kVs, pFrac * 0.85);
+    // Show actual R1 % of ALL valid votes, not just keiko vs sanchez
+    if (!r||r.tv===0) return CN;
+    return divColor(r.k/r.tv + r.s/r.tv > 0 ? r.k/(r.k+r.s) : 0.5);
   }
   if (type === 'growth-k') {
-    if (!ld || !r21 || r21.tv21 === 0 || (ld.k + ld.s) === 0) return CN;
-    const diff = ld.k / (ld.k + ld.s) - r21.k21 / r21.tv21;
-    return diffColor(diff, CK, CS);
+    if (!ld||!r21||r21.tv21===0||(ld.k+ld.s)===0) return CN;
+    const diff = ld.k/(ld.k+ld.s) - r21.k21/r21.tv21;
+    // Red = Keiko better than 2021, Green = Keiko worse than 2021
+    return overUnderColor(diff);
   }
   if (type === 'growth-s') {
-    if (!ld || !r21 || r21.tv21 === 0 || (ld.k + ld.s) === 0) return CN;
-    const diff = ld.s / (ld.k + ld.s) - r21.c21 / r21.tv21;
-    return diffColor(diff, CS, CK);
+    if (!ld||!r21||r21.tv21===0||(ld.k+ld.s)===0) return CN;
+    const diff = ld.s/(ld.k+ld.s) - r21.c21/r21.tv21;
+    // Red = Sanchez better than Castillo, Green = Sanchez worse
+    return overUnderColor(diff);
   }
   return CN;
 }
 
-// t=1 → CK (orange), t=0 → CS (green), t=0.5 → white; intensity scales saturation
+function distColorR1(r) {
+  // Soft background based on R1 winner (desaturated)
+  if (!r || r.tv === 0) return '#e8e4dc';
+  const ks = r.k + r.s > 0 ? r.k / (r.k + r.s) : 0.5;
+  return divColor(ks, 0.18); // very light intensity for background
+}
+
+// t=1 → CK (orange), t=0 → CS (green), t=0.5 → white
 function divColor(t, intensity = 1) {
-  const a = hexRGB(CK), b = hexRGB(CS), w = [255, 255, 255];
-  const src = t >= 0.5 ? a : b;
-  const str = Math.min(Math.abs(t - 0.5) * 2, 1) * clamp(intensity, 0, 1);
-  return `rgb(${Math.round(w[0] + (src[0] - w[0]) * str)},` +
-         `${Math.round(w[1] + (src[1] - w[1]) * str)},` +
-         `${Math.round(w[2] + (src[2] - w[2]) * str)})`;
+  const a=hRGB(CK), b=hRGB(CS), w=[255,255,255];
+  const src=t>=0.5?a:b;
+  const str=Math.min(Math.abs(t-0.5)*2,1)*clamp(intensity,0,1);
+  return `rgb(${Math.round(w[0]+(src[0]-w[0])*str)},${Math.round(w[1]+(src[1]-w[1])*str)},${Math.round(w[2]+(src[2]-w[2])*str)})`;
 }
 
-function diffColor(diff, pos, neg) {
-  const s = clamp(Math.abs(diff) / 0.25, 0, 1);
-  return divColor(diff > 0 ? 0.5 + s * 0.5 : 0.5 - s * 0.5);
+// Over/under map: red = positive (over), green = negative (under)
+function overUnderColor(diff) {
+  const RED   = '#e53e3e';
+  const GREEN = '#276749';
+  const str = clamp(Math.abs(diff) / 0.25, 0, 1);
+  const src = diff > 0 ? hRGB(RED) : hRGB(GREEN);
+  const w = [245, 242, 236];
+  return `rgb(${Math.round(w[0]+(src[0]-w[0])*str)},${Math.round(w[1]+(src[1]-w[1])*str)},${Math.round(w[2]+(src[2]-w[2])*str)})`;
 }
 
-function hexRGB(h) {
-  return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
-}
+function hRGB(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
 
-// ─── TOOLTIP ─────────────────────────────────────────────────────────────────
-function bindTooltip() {
-  const tt = document.getElementById('map-tooltip');
-  const paths = document.querySelectorAll('#map-svg #districts path[data-u]');
-  paths.forEach(path => {
-    path.addEventListener('mousemove', e => {
-      const u = path.getAttribute('data-u');
-      const r = S.r1?.get(u), r21 = S.r2021?.get(u), ld = S.lByU?.get(u);
-      if (!r) return;
-      let html = `<b style="font-size:11px">${r.d}, ${r.p}</b><br>`;
-      if (ld && (ld.k + ld.s) > 0) {
-        const tv = ld.k + ld.s, win = ld.k > ld.s;
-        html += `<span style="color:${CK}">Keiko: ${(ld.k/tv*100).toFixed(1)}%</span><br>`;
-        html += `<span style="color:${CS}">Sánchez: ${(ld.s/tv*100).toFixed(1)}%</span><br>`;
-        html += `<b style="color:${win?CK:CS}">${win?'Keiko':'Sánchez'} +${fmtN(Math.abs(ld.k-ld.s))}</b><br>`;
-        html += `<span style="color:var(--faint)">Actas: ${ld.cm||0}/${r.tm}</span>`;
-      } else {
-        html += `<span style="color:var(--faint)">Sin datos 2ª vuelta</span><br>`;
-      }
-      if (r.tv > 0) {
-        const d = r.k + r.s;
-        const kS = d > 0 ? r.k/d*100 : 0;
-        html += `<span style="font-size:9px;color:var(--faint)">1ª vuelta: Keiko ${kS.toFixed(1)}% · Sánchez ${(100-kS).toFixed(1)}%</span>`;
-      }
-      tt.style.display = 'block';
-      tt.style.left = (e.clientX + 14) + 'px';
-      tt.style.top  = (e.clientY - 10) + 'px';
-      tt.innerHTML  = html;
-    });
-    path.addEventListener('mouseleave', () => { tt.style.display = 'none'; });
-  });
-}
+// ── BUBBLE MAPS ───────────────────────────────────────────────────────────────
+function drawMarginBubbles(g) {
+  if (!S.lByU || S.lByU.size === 0) return;
+  // Find max total votes for scaling
+  let maxVotes = 0;
+  for (const ld of S.lByU.values()) maxVotes = Math.max(maxVotes, ld.k + ld.s);
+  if (maxVotes === 0) return;
 
-// ─── LEGEND ──────────────────────────────────────────────────────────────────
-function renderLegend(type) {
-  const el = document.getElementById('legend-content');
-  const tl = document.getElementById('sidebar-title');
-  const cfgs = {
-    runoff:    { t:'Keiko vs. Sánchez',        cb: true, ll:'Sánchez', rl:'Keiko',   lc:CS, rc:CK },
-    r1:        { t:'1ª Vuelta — referencia',   cb: true, ll:'Sánchez', rl:'Keiko',   lc:CS, rc:CK },
-    pending:   { t:'Mesas pendientes', items: [{ c:CK, l:'Pendiente (zona Keiko)' }, { c:CS, l:'Pendiente (zona Sánchez)' }, { c:'#e0ddd5', l:'Completada' }] },
-    'growth-k':{ t:'Keiko vs. Keiko 2021',     cb: true, ll:'Baja vs. 2021', rl:'Sube vs. 2021', lc:CS, rc:CK },
-    'growth-s':{ t:'Sánchez vs. Castillo 2021',cb: true, ll:'Baja vs. 2021', rl:'Sube vs. 2021', lc:CK, rc:CS },
-  };
-  const c = cfgs[type] || cfgs.runoff;
-  tl.textContent = c.t;
-  if (c.cb) {
-    el.innerHTML = `
-      <div class="ms-colorbar" style="background:linear-gradient(to right,${c.lc},#f5f3ee,${c.rc})"></div>
-      <div class="ms-colorbar-lbl"><span style="color:${c.lc}">${c.ll}</span><span>50/50</span><span style="color:${c.rc}">${c.rl}</span></div>
-      <div class="ms-item" style="margin-top:7px"><div class="ms-swatch" style="background:${CN}"></div><span>Sin datos</span></div>`;
-  } else {
-    el.innerHTML = (c.items || []).map(i => `<div class="ms-item"><div class="ms-swatch" style="background:${i.c}"></div><span>${i.l}</span></div>`).join('');
+  const MAX_R = 18; // max bubble radius in SVG units
+  const bubbles = [];
+
+  for (const [u, ld] of S.lByU) {
+    const tv = ld.k + ld.s;
+    if (tv === 0) continue;
+    const c = S.cents?.[u];
+    if (!c) continue;
+    const margin = Math.abs(ld.k - ld.s);
+    const r = Math.sqrt(margin / maxVotes) * MAX_R;
+    if (r < 0.5) continue;
+    const col = ld.k > ld.s ? CK : CS;
+    bubbles.push({ c, r, col, u, margin: ld.k - ld.s, tv });
   }
+  // Sort smallest first so large bubbles don't obscure small ones
+  bubbles.sort((a, b) => a.r - b.r);
+  g.innerHTML = bubbles.map(b =>
+    `<circle cx="${b.c[0]}" cy="${b.c[1]}" r="${b.r.toFixed(1)}" fill="${b.col}" fill-opacity="0.72" stroke="white" stroke-width="0.3" data-u="${b.u}" style="cursor:pointer"/>`
+  ).join('');
 }
 
-function renderTopDists() {
-  const el = document.getElementById('top-districts');
-  if (!S.r1) { el.innerHTML = ''; return; }
-  const rows = [...S.r1.values()]
-    .filter(d => d.tv > 0)
-    .sort((a, b) => {
-      const la = S.lByU?.get(a.u), lb = S.lByU?.get(b.u);
-      return ((lb?.k||0) + (lb?.s||0)) - ((la?.k||0) + (la?.s||0));
-    })
-    .slice(0, 8);
-  el.innerHTML = rows.map(d => {
-    const ld = S.lByU?.get(d.u), tv = ld ? ld.k + ld.s : 0;
-    const win = ld && ld.k > ld.s, pct = tv > 0 ? (win ? ld.k / tv : ld.s / tv) * 100 : 0;
-    return `<div class="ms-row">
-      <span class="ms-row-name">${d.d}</span>
-      <span style="font-weight:600;color:${tv > 0 ? (win ? CK : CS) : 'var(--faint)'}">
-        ${tv > 0 ? pct.toFixed(1) + '%' : '—'}</span>
-    </div>`;
+function drawPendingBubbles(g) {
+  if (!S.r1) return;
+  let maxPending = 0;
+  for (const r of S.r1.values()) {
+    const cm = S.lByU?.get(r.u)?.cm || 0;
+    maxPending = Math.max(maxPending, r.tm - cm);
+  }
+  if (maxPending === 0) return;
+
+  const MAX_R = 16;
+  const bubbles = [];
+
+  for (const [u, r] of S.r1) {
+    const cm = S.lByU?.get(u)?.cm || 0;
+    const pending = r.tm - cm;
+    if (pending <= 0) continue;
+    const c = S.cents?.[u];
+    if (!c) continue;
+    const rv = Math.sqrt(pending / maxPending) * MAX_R;
+    if (rv < 0.5) continue;
+    // Color by who leads in R1 in this area (expected direction of pending votes)
+    const ks = r.k + r.s > 0 ? r.k / (r.k + r.s) : 0.5;
+    const col = ks > 0.5 ? CK : CS;
+    bubbles.push({ c, r: rv, col, u, pending });
+  }
+  bubbles.sort((a, b) => a.r - b.r);
+  g.innerHTML = bubbles.map(b =>
+    `<circle cx="${b.c[0]}" cy="${b.c[1]}" r="${b.r.toFixed(1)}" fill="${b.col}" fill-opacity="0.70" stroke="white" stroke-width="0.3" data-u="${b.u}" style="cursor:pointer"/>`
+  ).join('');
+}
+
+// ── TOOLTIP ───────────────────────────────────────────────────────────────────
+function bindTooltip() {
+  const tt = document.getElementById('tt');
+  const wrap = document.getElementById('map-wrap');
+
+  function showTT(e, u) {
+    const r=S.r1?.get(u), r21=S.r2021?.get(u), ld=S.lByU?.get(u);
+    if (!r) return;
+    let html = `<b>${r.d}, ${r.p}</b><br>`;
+    if (ld && (ld.k+ld.s) > 0) {
+      const tv=ld.k+ld.s, win=ld.k>ld.s;
+      html+=`<span style="color:${CK}">Keiko: ${(ld.k/tv*100).toFixed(1)}%</span><br>`;
+      html+=`<span style="color:${CS}">Sánchez: ${(ld.s/tv*100).toFixed(1)}%</span><br>`;
+      html+=`<b style="color:${win?CK:CS}">${win?'Keiko':'Sánchez'} +${fmt(Math.abs(ld.k-ld.s))}</b><br>`;
+      html+=`<span style="color:var(--faint)">Actas: ${ld.cm||0}/${r.tm}</span>`;
+    } else {
+      html+=`<span style="color:var(--faint)">Sin datos 2ª vuelta</span><br>`;
+    }
+    if (r.tv > 0) {
+      // Show actual % of all valid votes (not just K vs S)
+      const kPct = (r.k/r.tv*100).toFixed(1);
+      const sPct = (r.s/r.tv*100).toFixed(1);
+      html+=`<span style="font-size:9px;color:var(--faint)">1ª vuelta: K ${kPct}% · S ${sPct}%</span>`;
+    }
+    tt.style.display='block';
+    tt.style.left=(e.clientX+14)+'px';
+    tt.style.top=(e.clientY-10)+'px';
+    tt.innerHTML=html;
+  }
+
+  wrap.addEventListener('mousemove', e => {
+    const el = e.target.closest('[data-u]');
+    if (el) showTT(e, el.getAttribute('data-u'));
+    else tt.style.display='none';
+  });
+  wrap.addEventListener('mouseleave', () => { tt.style.display='none'; });
+}
+
+// ── LEGEND ────────────────────────────────────────────────────────────────────
+function renderLegend(type) {
+  const el=id('sb-legend'), tl=id('sb-title');
+  const cfgs = {
+    runoff:   {t:'Keiko vs. Sánchez',      cb:true, ll:'Sánchez', rl:'Keiko', lc:CS, rc:CK},
+    margin:   {t:'Margen (burbujas)',       bubble:true, items:[{c:CK,l:'Keiko adelante'},{c:CS,l:'Sánchez adelante'}], note:'Tamaño = margen absoluto'},
+    pending:  {t:'Mesas pendientes',        bubble:true, items:[{c:CK,l:'Pend. zona Keiko'},{c:CS,l:'Pend. zona Sánchez'}], note:'Tamaño = mesas pendientes'},
+    r1:       {t:'1ra Vuelta 2026',         cb:true, ll:'Sánchez', rl:'Keiko', lc:CS, rc:CK, note:'% sobre total votos válidos'},
+    'growth-k':{t:'Keiko vs. Keiko 2021',  ou:true, pos:'Supera 2021', neg:'Por debajo 2021'},
+    'growth-s':{t:'Sánchez vs. Castillo 2021', ou:true, pos:'Supera Castillo', neg:'Por debajo Castillo'},
+  };
+  const c=cfgs[type]||cfgs.runoff;
+  tl.textContent=c.t;
+  let html='';
+  if (c.cb) {
+    html=`<div class="ms-cb" style="background:linear-gradient(to right,${c.lc},#f5f3ee,${c.rc})"></div>
+    <div class="ms-cl"><span style="color:${c.lc}">${c.ll}</span><span>50/50</span><span style="color:${c.rc}">${c.rl}</span></div>
+    <div class="ms-item" style="margin-top:6px"><div class="ms-sw" style="background:${CN}"></div><span>Sin datos</span></div>`;
+    if (c.note) html+=`<div style="font-size:8px;color:var(--faint);margin-top:4px">${c.note}</div>`;
+  } else if (c.ou) {
+    html=`<div class="ms-cb" style="background:linear-gradient(to right,#276749,#f5f3ee,#e53e3e)"></div>
+    <div class="ms-cl"><span style="color:#276749">${c.neg}</span><span style="color:#e53e3e">${c.pos}</span></div>
+    <div class="ms-item" style="margin-top:6px"><div class="ms-sw" style="background:${CN}"></div><span>Sin datos</span></div>`;
+  } else if (c.bubble) {
+    html=(c.items||[]).map(i=>`<div class="ms-item"><div style="width:13px;height:13px;border-radius:50%;background:${i.c};opacity:.75;flex-shrink:0"></div><span>${i.l}</span></div>`).join('');
+    if (c.note) html+=`<div style="font-size:8px;color:var(--faint);margin-top:4px">${c.note}</div>`;
+  }
+  el.innerHTML=html;
+}
+
+function renderTopDists(type) {
+  const el=id('sb-top');
+  if (!S.r1){el.innerHTML='';return;}
+  const rows=[...S.r1.values()].filter(d=>d.tv>0)
+    .sort((a,b)=>((S.lByU?.get(b.u)?.k||0)+(S.lByU?.get(b.u)?.s||0))-((S.lByU?.get(a.u)?.k||0)+(S.lByU?.get(a.u)?.s||0)))
+    .slice(0,8);
+  el.innerHTML=rows.map(d=>{
+    const ld=S.lByU?.get(d.u), tv=ld?ld.k+ld.s:0;
+    const win=ld&&ld.k>ld.s, pct=tv>0?(win?ld.k/tv:ld.s/tv)*100:0;
+    return `<div class="ms-row"><span class="ms-rn">${d.d}</span><span style="font-weight:600;color:${tv>0?(win?CK:CS):'var(--faint)'}">
+      ${tv>0?pct.toFixed(1)+'%':'—'}</span></div>`;
   }).join('');
 }
 
-// ─── DEPT TABLE ───────────────────────────────────────────────────────────────
-function updateDeptTable() {
-  if (!S.lByU || S.lByU.size === 0 || !S.r1) return;
-  const depts = {};
-  for (const [u, r] of S.r1) {
-    const dept = r.r || 'Desconocido';
-    if (!depts[dept]) depts[dept] = { name: dept, r1tm: 0, lk: 0, ls: 0, lm: 0 };
-    depts[dept].r1tm += r.tm;
-    const ld = S.lByU.get(u);
-    if (ld) { depts[dept].lk += ld.k || 0; depts[dept].ls += ld.s || 0; depts[dept].lm += ld.cm || 0; }
+// ── DEPT TABLE ────────────────────────────────────────────────────────────────
+function updateDepts() {
+  if (!S.lByU||S.lByU.size===0||!S.r1) return;
+  const depts={};
+  for (const [u,r] of S.r1) {
+    const dept=r.r||'Desconocido';
+    if (!depts[dept]) depts[dept]={name:dept,r1tm:0,lk:0,ls:0,lm:0};
+    depts[dept].r1tm+=r.tm;
+    const ld=S.lByU.get(u);
+    if (ld){depts[dept].lk+=ld.k||0;depts[dept].ls+=ld.s||0;depts[dept].lm+=ld.cm||0;}
   }
-  const rows = Object.values(depts).sort((a, b) => (b.lk + b.ls) - (a.lk + a.ls));
-  document.getElementById('dept-tbody').innerHTML = rows.map(r => {
-    const tv = r.lk + r.ls; if (!tv) return '';
-    const kP = r.lk / tv * 100, m = r.lk - r.ls, mP = m / tv * 100, pR = r.r1tm > 0 ? r.lm / r.r1tm * 100 : 0;
+  const rows=Object.values(depts).sort((a,b)=>(b.lk+b.ls)-(a.lk+a.ls));
+  id('dept-tb').innerHTML=rows.map(r=>{
+    const tv=r.lk+r.ls; if(!tv) return '';
+    const kP=r.lk/tv*100,m=r.lk-r.ls,mP=m/tv*100,pR=r.r1tm>0?r.lm/r.r1tm*100:0;
     return `<tr>
       <td style="font-weight:600">${r.name}</td>
-      <td><span style="color:${CK}">${kP.toFixed(1)}%</span> <span style="color:var(--faint)">${fmtN(r.lk)}</span></td>
-      <td><span style="color:${CS}">${(100-kP).toFixed(1)}%</span> <span style="color:var(--faint)">${fmtN(r.ls)}</span></td>
+      <td><span style="color:${CK}">${kP.toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.lk)}</span></td>
+      <td><span style="color:${CS}">${(100-kP).toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.ls)}</span></td>
       <td style="color:${m>=0?CK:CS};font-weight:600">${m>=0?'+':''}${mP.toFixed(1)}%</td>
-      <td><div style="display:flex;align-items:center;gap:4px">
+      <td><div style="display:flex;align-items:center;gap:3px">
         <div style="flex:1;height:3px;background:var(--bg);border-radius:2px;overflow:hidden">
-          <div style="height:100%;width:${pR.toFixed(1)}%;background:#2d6a4f;border-radius:2px"></div>
-        </div><span>${pR.toFixed(0)}%</span></div></td>
-      <td style="color:var(--faint)">${fmtN(r.lm)}/${fmtN(r.r1tm)}</td>
+          <div style="height:100%;width:${pR.toFixed(1)}%;background:#2d6a4f"></div>
+        </div>${pR.toFixed(0)}%</div></td>
+      <td style="color:var(--faint)">${fmt(r.lm)}/${fmt(r.r1tm)}</td>
     </tr>`;
   }).join('');
 }
 
-// ─── MIGRATION ────────────────────────────────────────────────────────────────
+// ── MIGRATION ─────────────────────────────────────────────────────────────────
 function updateMigration() {
-  const has = S.lByU && S.lByU.size > 0;
-  document.getElementById('mg-nodata').style.display = has ? 'none' : '';
-  const grid = document.getElementById('mg-grid');
-  if (!has || !S.r1) { grid.style.display = 'none'; return; }
-  grid.style.display = '';
-  const data = [];
-  for (const [u, r] of S.r1) {
-    const ld = S.lByU.get(u);
-    if (!ld || (ld.k + ld.s) === 0 || r.tv === 0) continue;
-    const lv = ld.k + ld.s;
-    data.push({ kS2: ld.k / lv, r1K: r.k / r.tv, r1S: r.s / r.tv, r1N: r.n / r.tv, r1RL: r.rl / r.tv, w: Math.min(ld.cm || 1, 20) });
+  const has=S.lByU&&S.lByU.size>0;
+  id('mg-nd').style.display=has?'none':'';
+  const grid=id('mg-grid');
+  if (!has||!S.r1){grid.style.display='none';return;}
+  grid.style.display='';
+  const data=[];
+  for (const [u,r] of S.r1) {
+    const ld=S.lByU.get(u);
+    if (!ld||(ld.k+ld.s)===0||r.tv===0) continue;
+    const lv=ld.k+ld.s;
+    data.push({kS2:ld.k/lv,r1K:r.k/r.tv,r1S:r.s/r.tv,r1N:r.n/r.tv,r1RL:r.rl/r.tv,w:Math.min(ld.cm||1,20)});
   }
-  if (data.length < 10) { grid.style.display = 'none'; return; }
-  const wS = data.reduce((s, d) => s + d.w, 0);
-  const wavg = k => data.reduce((s, d) => s + d.w * d[k], 0) / wS;
-  const avgK2 = wavg('kS2');
-  const corr = xk => {
-    const mx = wavg(xk);
-    const cov = data.reduce((s, d) => s + d.w * (d[xk]-mx) * (d.kS2-avgK2), 0) / wS;
-    const sx = Math.sqrt(data.reduce((s, d) => s + d.w * (d[xk]-mx)**2, 0) / wS);
-    const sy = Math.sqrt(data.reduce((s, d) => s + d.w * (d.kS2-avgK2)**2, 0) / wS);
-    return sx * sy > 0 ? cov / (sx * sy) : 0;
+  if (data.length<10){grid.style.display='none';return;}
+  const wS=data.reduce((s,d)=>s+d.w,0);
+  const wavg=k=>data.reduce((s,d)=>s+d.w*d[k],0)/wS;
+  const avgK2=wavg('kS2');
+  const corr=xk=>{
+    const mx=wavg(xk);
+    const cov=data.reduce((s,d)=>s+d.w*(d[xk]-mx)*(d.kS2-avgK2),0)/wS;
+    const sx=Math.sqrt(data.reduce((s,d)=>s+d.w*(d[xk]-mx)**2,0)/wS);
+    const sy=Math.sqrt(data.reduce((s,d)=>s+d.w*(d.kS2-avgK2)**2,0)/wS);
+    return sx*sy>0?cov/(sx*sy):0;
   };
-  const flow = c => clamp(Math.round((0.5 + c * 0.4) * 100), 5, 95);
-  const parties = [
-    { label: 'Fuerza Popular (R1)',       color: CK,        kF: flow(corr('r1K')) },
-    { label: 'Juntos por el Perú (R1)',   color: CS,        kF: flow(corr('r1S')) },
-    { label: 'Buen Gobierno (Nieto)',     color: '#d97706', kF: flow(corr('r1N')) },
-    { label: 'Renovación Popular (RLA)', color: '#1e40af', kF: flow(corr('r1RL')) },
+  const flow=c=>clamp(Math.round((0.5+c*0.4)*100),5,95);
+  const parties=[
+    {label:'Fuerza Popular (R1)',     color:CK,       kF:flow(corr('r1K'))},
+    {label:'Juntos por el Perú (R1)',color:CS,       kF:flow(corr('r1S'))},
+    {label:'Buen Gobierno (Nieto)',   color:'#d97706',kF:flow(corr('r1N'))},
+    {label:'Renovación Popular (RLA)',color:'#1e40af',kF:flow(corr('r1RL'))},
   ];
-  grid.innerHTML = ['Keiko', 'Sánchez'].map((cand, ci) => `
+  grid.innerHTML=['Keiko','Sánchez'].map((cand,ci)=>`
     <div class="mg-card">
-      <div class="mg-title">Votos 1ª vuelta → <span style="color:${ci===0?CK:CS}">${cand}</span></div>
-      ${parties.map(p => { const pct = ci === 0 ? p.kF : 100 - p.kF; return `<div class="mg-row">
+      <div class="mg-t">Votos 1ª vuelta → <span style="color:${ci===0?CK:CS}">${cand}</span></div>
+      ${parties.map(p=>{const pct=ci===0?p.kF:100-p.kF;return`<div class="mg-row">
         <div class="mg-dot" style="background:${p.color}"></div>
-        <div class="mg-name">${p.label}</div>
-        <div class="mg-bar-wrap"><div class="mg-bar" style="width:${pct}%;background:${ci===0?CK:CS}"></div></div>
-        <div class="mg-pct">${pct}%</div>
-      </div>`; }).join('')}
-      <div style="font-size:8px;color:var(--faint);margin-top:6px">${data.length} distritos con datos pareados.</div>
+        <div class="mg-nm">${p.label}</div>
+        <div class="mg-bw"><div class="mg-b" style="width:${pct}%;background:${ci===0?CK:CS}"></div></div>
+        <div class="mg-p">${pct}%</div>
+      </div>`;}).join('')}
+      <div style="font-size:8px;color:var(--faint);margin-top:5px">${data.length} distritos con datos pareados.</div>
     </div>`).join('');
 }
 
-// ─── MASTER UPDATE ────────────────────────────────────────────────────────────
+// ── MASTER UPDATE ─────────────────────────────────────────────────────────────
 function updateUI() {
-  updateResultsBar();
-  updateForecast();
-  if (S.mapLoaded) colorMap();
-  updateDeptTable();
-  updateMigration();
+  updateBar(); updateForecast();
+  if (S.mapLoaded) renderMap();
+  updateDepts(); updateMigration();
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-function normalCDF(z) {
-  const t = 1 / (1 + 0.3275911 * Math.abs(z));
-  const p = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
-  const v = 1 - p * Math.exp(-z * z / 2);
-  return z >= 0 ? v : 1 - v;
-}
-function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-function fmtN(n) { if (n == null) return '—'; return Math.round(n).toLocaleString('es-PE'); }
-function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function normalCDF(z){const t=1/(1+0.3275911*Math.abs(z));const p=t*(0.254829592+t*(-0.284496736+t*(1.421413741+t*(-1.453152027+t*1.061405429))));const v=1-p*Math.exp(-z*z/2);return z>=0?v:1-v;}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+function fmt(n){if(n==null)return'—';return Math.round(n).toLocaleString('es-PE');}
+function id(x){return document.getElementById(x);}
+function set(x,v){const el=id(x);if(el)el.textContent=v;}
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-(async () => {
-  await loadStatic();
-  await loadLive();
-  // Map loads lazily when tab is opened — preload it now in background
-  loadMap();
-  setInterval(loadLive, 60000);
-})();
+init();
 </script>
 </body>
 </html>
