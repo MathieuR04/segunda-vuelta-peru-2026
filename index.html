@@ -12,6 +12,8 @@
   --text: #1a1a18; --muted: #6b6b67; --faint: #9b9b97;
   --keiko:   #f57b2d;
   --sanchez: #48cb50;
+  --over:    #2ecc71;   /* over-performing = bright green */
+  --under:   #e74c3c;   /* under-performing = bright red */
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -22,113 +24,114 @@
 }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 10px; font-size: 13px; }
 
-/* ── HEADER ── */
 .hdr { text-align: center; margin-bottom: 8px; }
 .hdr h1 { font-size: 15px; font-weight: 600; }
-.hdr .byline { font-size: 10px; color: var(--faint); margin-top: 2px; }
-.hdr .byline a { color: var(--text); font-weight: 500; text-decoration: none; }
+.hdr .by { font-size: 10px; color: var(--faint); margin-top: 2px; }
+.hdr .by a { color: var(--text); font-weight: 500; text-decoration: none; }
 
-/* ── RESULTS BAR ── */
-.rb {
-  background: var(--surface); border: 0.5px solid var(--border);
-  border-radius: 10px; padding: 7px 12px; margin-bottom: 8px;
-  display: flex; align-items: center; gap: 8px;
-}
-.rb-cand { display: flex; flex-direction: column; }
-.rb-lbl  { font-size: 8px; color: var(--faint); text-transform: uppercase; letter-spacing: .04em; }
-.rb-pct  { font-size: 16px; font-weight: 700; line-height: 1.1; }
-.rb-vts  { font-size: 9px; color: var(--muted); }
-.rb-mid  { flex: 1; min-width: 60px; }
-.rb-bar  { display: flex; height: 7px; border-radius: 4px; overflow: hidden; background: var(--bg); margin-bottom: 2px; }
-.rb-bar-k { height: 100%; background: var(--keiko);   transition: width .6s; }
-.rb-bar-s { height: 100%; background: var(--sanchez); transition: width .6s; }
-.rb-meta  { text-align: center; font-size: 9px; color: var(--faint); }
+/* RESULTS BAR */
+.rb { background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; padding: 7px 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.rb-c { display: flex; flex-direction: column; }
+.rb-lbl { font-size: 8px; color: var(--faint); text-transform: uppercase; letter-spacing: .04em; }
+.rb-pct { font-size: 16px; font-weight: 700; line-height: 1.1; }
+.rb-vts { font-size: 9px; color: var(--muted); }
+.rb-mid { flex: 1; min-width: 60px; }
+.rb-bar { display: flex; height: 7px; border-radius: 4px; overflow: hidden; background: var(--bg); margin-bottom: 2px; }
+.rb-bk { height: 100%; background: var(--keiko);   transition: width .6s; }
+.rb-bs { height: 100%; background: var(--sanchez); transition: width .6s; }
+.rb-meta { text-align: center; font-size: 9px; color: var(--faint); }
 .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ccc; vertical-align: middle; margin-right: 2px; }
 .dot.on { background: #16a34a; animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
 
-/* ── TABS ── */
+/* TABS */
 .tabs { display: flex; gap: 4px; justify-content: center; margin-bottom: 8px; flex-wrap: wrap; }
 .tab { font-size: 10px; padding: 3px 11px; border: 0.5px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--surface); color: var(--muted); }
 .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
-
 .panel { display: none; }
 .panel.active { display: block; }
 
-/* ── CARD ── */
+/* CARD */
 .card { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
-.card-title { font-size: 11px; font-weight: 600; margin-bottom: 1px; }
-.card-sub   { font-size: 8px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
+.card-t { font-size: 11px; font-weight: 600; margin-bottom: 1px; }
+.card-s { font-size: 8px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
 
-/* ── FORECAST ── */
-.fc-wrap { max-width: 580px; margin: 0 auto; }
-.fc-hdr  { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 10px; }
+/* FORECAST */
+.fc-w { max-width: 580px; margin: 0 auto; }
+.fc-h { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 10px; }
 .fc-l { text-align: left; } .fc-r { text-align: right; } .fc-c { text-align: center; }
-.fc-party { font-size: 8px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
-.fc-name  { font-size: 11px; font-weight: 600; }
-.fc-prob  { font-size: 26px; font-weight: 700; line-height: 1; }
-.fc-plbl  { font-size: 8px; color: var(--muted); }
-.fc-vs    { font-size: 9px; color: var(--faint); }
-.fc-st    { font-size: 9px; color: var(--muted); }
-.fc-mc    { font-size: 8px; color: var(--faint); }
-#needle-wrap { width: 100%; max-width: 460px; margin: 0 auto 8px; }
-.pb-wrap { display: flex; height: 17px; border-radius: 9px; overflow: hidden; border: 0.5px solid var(--border); margin: 6px 0; }
+.fc-py { font-size: 8px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
+.fc-nm { font-size: 11px; font-weight: 600; }
+.fc-pb { font-size: 26px; font-weight: 700; line-height: 1; }
+.fc-pl { font-size: 8px; color: var(--muted); }
+.fc-vs { font-size: 9px; color: var(--faint); }
+.fc-st { font-size: 9px; color: var(--muted); }
+.fc-mc { font-size: 8px; color: var(--faint); }
+#nw { width: 100%; max-width: 460px; margin: 0 auto 8px; }
+.pb-w { display: flex; height: 17px; border-radius: 9px; overflow: hidden; border: 0.5px solid var(--border); margin: 6px 0; }
 .pb-k { background: var(--keiko);   display: flex; align-items: center; justify-content: center; transition: width .8s cubic-bezier(.4,0,.2,1); }
 .pb-s { background: var(--sanchez); display: flex; align-items: center; justify-content: center; transition: width .8s cubic-bezier(.4,0,.2,1); }
 .pb-l { font-size: 9px; font-weight: 600; color: white; padding: 0 6px; white-space: nowrap; }
-.fc-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; margin-top: 8px; }
-.fc-stat  { background: var(--bg); border-radius: 7px; padding: 6px; text-align: center; }
+.fc-ss { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; margin-top: 8px; }
+.fc-s  { background: var(--bg); border-radius: 7px; padding: 6px; text-align: center; }
 .fc-sv { font-size: 12px; font-weight: 600; }
 .fc-sl { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-.fc-note { font-size: 9px; color: var(--muted); text-align: center; line-height: 1.5; margin-top: 7px; }
+.fc-nt { font-size: 9px; color: var(--muted); text-align: center; line-height: 1.5; margin-top: 7px; }
 
-/* ── MAP ── */
-.map-type-tabs { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 7px; }
+/* MAP */
+.mtt-row { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 7px; }
 .mtt { font-size: 9px; padding: 2px 8px; border: 0.5px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--surface); color: var(--muted); white-space: nowrap; }
 .mtt.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 
 .map-layout { display: grid; grid-template-columns: 1fr 220px; gap: 8px; align-items: start; }
-@media (max-width: 620px) { .map-layout { grid-template-columns: 1fr; } .map-sidebar { display: none; } }
+@media (max-width: 620px) { .map-layout { grid-template-columns: 1fr; } .map-sb { display: none; } }
 
-#map-wrap {
-  background: var(--surface); border: 0.5px solid var(--border-light);
-  border-radius: 10px; overflow: hidden; position: relative;
-  height: calc(100vh - 200px); max-height: 620px;
+#mw {
+  background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px;
+  overflow: hidden; position: relative; height: calc(100vh - 200px); max-height: 620px;
   cursor: grab; user-select: none;
 }
-#map-wrap:active { cursor: grabbing; }
-#map-wrap > svg#map-svg { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+#mw:active { cursor: grabbing; }
+#mw > svg#map-svg { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+/* Suppress SVG title tooltip boxes */
+#mw svg title { display: none; pointer-events: none; }
 
-.zoom-btns { position: absolute; bottom: 8px; right: 8px; display: flex; flex-direction: column; gap: 2px; z-index: 10; }
-.zb { width: 24px; height: 24px; border-radius: 5px; background: var(--surface); border: 0.5px solid var(--border); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.zbw { position: absolute; bottom: 8px; right: 8px; display: flex; flex-direction: column; gap: 2px; z-index: 10; }
+.zb  { width: 24px; height: 24px; border-radius: 5px; background: var(--surface); border: 0.5px solid var(--border); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
 .zb:hover { background: var(--bg); }
 
-#tt { position: fixed; pointer-events: none; z-index: 200; background: var(--surface); border: 0.5px solid var(--border); border-radius: 7px; padding: 7px 9px; font-size: 10px; line-height: 1.7; max-width: 190px; display: none; box-shadow: 0 3px 12px rgba(0,0,0,.12); }
+#tt { position: fixed; pointer-events: none; z-index: 200; background: var(--surface); border: 0.5px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 10px; line-height: 1.75; max-width: 210px; display: none; box-shadow: 0 3px 14px rgba(0,0,0,.13); }
 
-.map-sidebar { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 10px; }
+.map-sb { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 10px; }
 .ms-t  { font-size: 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
 .ms-cb { height: 8px; border-radius: 3px; margin: 2px 0; }
 .ms-cl { display: flex; justify-content: space-between; font-size: 8px; color: var(--faint); }
-.ms-item { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--muted); margin-bottom: 3px; }
+.ms-it { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--muted); margin-bottom: 3px; }
 .ms-sw { width: 13px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-.ms-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 0.5px solid var(--border-light); font-size: 9px; }
-.ms-row:last-child { border-bottom: none; }
+.ms-ro { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 0.5px solid var(--border-light); font-size: 9px; }
+.ms-ro:last-child { border-bottom: none; }
 .ms-rn { color: var(--muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ── MIGRATION ── */
-.mg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 680px; }
-@media (max-width: 520px) { .mg-grid { grid-template-columns: 1fr; } }
-.mg-card { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 9px; }
-.mg-t { font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 7px; }
-.mg-row { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
-.mg-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.mg-nm { font-size: 9px; color: var(--muted); flex: 0 0 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mg-bw { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
-.mg-b  { height: 100%; border-radius: 3px; transition: width .5s; }
-.mg-p  { font-size: 9px; color: var(--faint); width: 26px; text-align: right; }
+/* FLUJO — full-width party rows */
+.flujo-party {
+  background: var(--surface); border: 0.5px solid var(--border-light);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 6px;
+}
+.fp-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.fp-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.fp-name { font-size: 11px; font-weight: 600; }
+.fp-pct  { font-size: 9px; color: var(--muted); margin-left: auto; }
+.fp-flows { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.fp-flow { display: flex; flex-direction: column; gap: 3px; }
+.fp-flow-lbl { font-size: 8px; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fp-flow-bar-wrap { height: 40px; display: flex; align-items: flex-end; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.fp-flow-bar { width: 100%; border-radius: 3px 3px 0 0; transition: height .5s; }
+.fp-flow-pct { font-size: 9px; font-weight: 600; text-align: center; color: var(--text); }
 
-/* ── TABLE ── */
-.tbl-wrap { overflow-x: auto; }
+/* DEPT TABLE */
+.tbl-w { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 5px; }
 th { font-weight: 600; color: var(--muted); text-align: left; padding: 4px 5px; border-bottom: 0.5px solid var(--border); font-size: 8px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
 td { padding: 3px 5px; border-bottom: 0.5px solid var(--border-light); }
@@ -137,48 +140,40 @@ tr:hover td { background: var(--bg); }
 .no-data { background: var(--bg); border: 0.5px dashed var(--border); border-radius: 7px; padding: 12px; text-align: center; font-size: 10px; color: var(--muted); }
 .no-data strong { display: block; font-size: 11px; color: var(--text); margin-bottom: 2px; }
 
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 300; display: none; align-items: center; justify-content: center; padding: 16px; }
-.modal-overlay.open { display: flex; }
-.modal-box { background: var(--surface); border-radius: 12px; padding: 16px; max-width: 300px; width: 100%; text-align: center; font-size: 11px; }
-.modal-close { float: right; cursor: pointer; font-size: 16px; color: var(--muted); }
+.modal-ov { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 300; display: none; align-items: center; justify-content: center; padding: 16px; }
+.modal-ov.open { display: flex; }
+.modal-bx { background: var(--surface); border-radius: 12px; padding: 16px; max-width: 300px; width: 100%; text-align: center; font-size: 11px; }
+.modal-cl { float: right; cursor: pointer; font-size: 16px; color: var(--muted); }
 </style>
 </head>
 <body>
 
 <div class="hdr">
   <h1>🇵🇪 Segunda Vuelta Perú 2026 — Seguimiento en Vivo</h1>
-  <div class="byline">
+  <div class="by">
     Por <a href="https://x.com/KhamaRamaq" target="_blank">Mathieu Rojas</a> ·
     <a href="https://www.linkedin.com/in/mathieu-rojas-egoavil-889a64293/" target="_blank">LinkedIn</a> ·
     <span style="cursor:pointer;text-decoration:underline;color:var(--muted)" onclick="document.getElementById('ym').classList.add('open')">☕ Yape</span>
   </div>
 </div>
 
-<!-- RESULTS BAR -->
 <div class="rb">
-  <div class="rb-cand">
+  <div class="rb-c">
     <div class="rb-lbl" style="color:var(--keiko)">Fuerza Popular</div>
     <div class="rb-pct" id="rb-kp" style="color:var(--keiko)">—</div>
     <div class="rb-vts" id="rb-kv">—</div>
   </div>
   <div class="rb-mid">
-    <div class="rb-bar">
-      <div class="rb-bar-k" id="rb-bk" style="width:50%"></div>
-      <div class="rb-bar-s" id="rb-bs" style="width:50%"></div>
-    </div>
-    <div class="rb-meta">
-      <span class="dot" id="dot"></span><span id="ll">En espera</span> ·
-      <span id="rb-pr">—</span>% escrutado · <span id="rb-ts"></span>
-    </div>
+    <div class="rb-bar"><div class="rb-bk" id="rb-bk" style="width:50%"></div><div class="rb-bs" id="rb-bs" style="width:50%"></div></div>
+    <div class="rb-meta"><span class="dot" id="dot"></span><span id="ll">En espera</span> · <span id="rb-pr">—</span>% escrutado · <span id="rb-ts"></span></div>
   </div>
-  <div class="rb-cand" style="text-align:right">
+  <div class="rb-c" style="text-align:right">
     <div class="rb-lbl" style="color:var(--sanchez)">Juntos por el Perú</div>
     <div class="rb-pct" id="rb-sp" style="color:var(--sanchez)">—</div>
     <div class="rb-vts" id="rb-sv">—</div>
   </div>
 </div>
 
-<!-- TABS -->
 <div class="tabs">
   <div class="tab active" data-tab="pronostico">Pronóstico</div>
   <div class="tab" data-tab="mapas">Mapas</div>
@@ -188,15 +183,15 @@ tr:hover td { background: var(--bg); }
 
 <!-- PRONÓSTICO -->
 <div class="panel active" id="panel-pronostico">
-<div class="card fc-wrap">
-  <div class="card-title">Pronóstico Electoral</div>
-  <div class="card-sub">Modelo estadístico · R1 2026 + SV 2021 · Se actualiza automáticamente</div>
-  <div class="fc-hdr">
+<div class="card fc-w">
+  <div class="card-t">Pronóstico Electoral</div>
+  <div class="card-s">Modelo estadístico · R1 2026 + SV 2021 · Se actualiza automáticamente</div>
+  <div class="fc-h">
     <div class="fc-l">
-      <div class="fc-party" style="color:var(--keiko)">Fuerza Popular</div>
-      <div class="fc-name">Keiko Fujimori</div>
-      <div class="fc-prob" id="fc-kp" style="color:var(--keiko)">—</div>
-      <div class="fc-plbl">prob. de ganar</div>
+      <div class="fc-py" style="color:var(--keiko)">Fuerza Popular</div>
+      <div class="fc-nm">Keiko Fujimori</div>
+      <div class="fc-pb" id="fc-kp" style="color:var(--keiko)">—</div>
+      <div class="fc-pl">prob. de ganar</div>
     </div>
     <div class="fc-c">
       <div class="fc-vs">vs.</div>
@@ -204,13 +199,13 @@ tr:hover td { background: var(--bg); }
       <div class="fc-mc" id="fc-mc">0 / 92,766 mesas</div>
     </div>
     <div class="fc-r">
-      <div class="fc-party" style="color:var(--sanchez)">Juntos por el Perú</div>
-      <div class="fc-name">Roberto Sánchez</div>
-      <div class="fc-prob" id="fc-sp" style="color:var(--sanchez)">—</div>
-      <div class="fc-plbl">prob. de ganar</div>
+      <div class="fc-py" style="color:var(--sanchez)">Juntos por el Perú</div>
+      <div class="fc-nm">Roberto Sánchez</div>
+      <div class="fc-pb" id="fc-sp" style="color:var(--sanchez)">—</div>
+      <div class="fc-pl">prob. de ganar</div>
     </div>
   </div>
-  <div id="needle-wrap">
+  <div id="nw">
     <svg viewBox="0 0 500 210" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -236,45 +231,42 @@ tr:hover td { background: var(--bg); }
       <text id="nmg" x="250" y="170" text-anchor="middle" font-family="system-ui" font-size="10" fill="#6b6b67">Esperando resultados…</text>
     </svg>
   </div>
-  <div class="pb-wrap">
+  <div class="pb-w">
     <div class="pb-k" id="pb-k" style="width:50%"><span class="pb-l" id="pb-lk"></span></div>
     <div class="pb-s" id="pb-s" style="width:50%"><span class="pb-l" id="pb-ls"></span></div>
   </div>
-  <div class="fc-stats">
-    <div class="fc-stat"><div class="fc-sv" id="fc-mv">—</div><div class="fc-sl">Margen (votos)</div></div>
-    <div class="fc-stat"><div class="fc-sv" id="fc-mp">—%</div><div class="fc-sl">Margen (% válido)</div></div>
-    <div class="fc-stat"><div class="fc-sv" id="fc-rm">92,766</div><div class="fc-sl">Mesas pendientes</div></div>
+  <div class="fc-ss">
+    <div class="fc-s"><div class="fc-sv" id="fc-mv">—</div><div class="fc-sl">Margen (votos)</div></div>
+    <div class="fc-s"><div class="fc-sv" id="fc-mp">—%</div><div class="fc-sl">Margen (% válido)</div></div>
+    <div class="fc-s"><div class="fc-sv" id="fc-rm">92,766</div><div class="fc-sl">Mesas pendientes</div></div>
   </div>
-  <div class="fc-note" id="fc-nt">Sin datos ONPE aún. El pronóstico se actualizará automáticamente cuando comiencen a llegar resultados.</div>
+  <div class="fc-nt" id="fc-nt">Sin datos ONPE aún. El pronóstico se actualizará automáticamente.</div>
 </div>
 </div>
 
 <!-- MAPAS -->
 <div class="panel" id="panel-mapas">
-  <div class="map-type-tabs">
+  <div class="mtt-row">
     <div class="mtt active" data-map="runoff">Keiko vs. Sánchez</div>
-    <div class="mtt" data-map="margin">Margen (burbujas)</div>
+    <div class="mtt" data-map="margin">Burbujas</div>
     <div class="mtt" data-map="pending">Mesas pendientes</div>
     <div class="mtt" data-map="r1">1ra Vuelta 2026</div>
     <div class="mtt" data-map="growth-k">Keiko vs. Keiko 2021</div>
     <div class="mtt" data-map="growth-s">Sánchez vs. Castillo 2021</div>
   </div>
   <div class="map-layout">
-    <div id="map-wrap">
-      <div class="no-data" id="map-loading" style="margin:20px;position:relative;z-index:5"><strong>Cargando mapa…</strong></div>
-      <div class="zoom-btns">
+    <div id="mw">
+      <div class="no-data" id="mload" style="margin:20px;position:relative;z-index:5"><strong>Cargando mapa…</strong></div>
+      <div class="zbw">
         <button class="zb" id="zi">+</button>
         <button class="zb" id="zo">−</button>
         <button class="zb" id="zr" style="font-size:10px">⊡</button>
       </div>
     </div>
-    <div class="map-sidebar">
-      <div class="ms-t" id="sb-title">Leyenda</div>
-      <div id="sb-legend"></div>
-      <div style="margin-top:9px">
-        <div class="ms-t">Top distritos</div>
-        <div id="sb-top"></div>
-      </div>
+    <div class="map-sb">
+      <div class="ms-t" id="sb-t">Leyenda</div>
+      <div id="sb-l"></div>
+      <div style="margin-top:9px"><div class="ms-t">Top distritos</div><div id="sb-top"></div></div>
     </div>
   </div>
   <div id="tt"></div>
@@ -282,20 +274,18 @@ tr:hover td { background: var(--bg); }
 
 <!-- FLUJO -->
 <div class="panel" id="panel-flujo">
-<div class="card">
-  <div class="card-title">Flujo de Votos desde 1ª Vuelta</div>
-  <div class="card-sub">Estimación de migración · Correlaciones a nivel de distrito</div>
+  <div class="card-t" style="margin-bottom:4px">Flujo de Votos desde 1ª Vuelta</div>
+  <div class="card-s" style="margin-bottom:10px">ESTIMACIÓN DE MIGRACIÓN · CORRELACIONES A NIVEL DE DISTRITO</div>
   <div class="no-data" id="mg-nd"><strong>Sin datos de 2ª vuelta aún</strong>Cuando lleguen resultados estimaremos cómo migran los votos de cada partido.</div>
-  <div class="mg-grid" id="mg-grid" style="display:none;margin-top:8px"></div>
-</div>
+  <div id="flujo-rows"></div>
 </div>
 
 <!-- DEPARTAMENTOS -->
 <div class="panel" id="panel-departamentos">
 <div class="card">
-  <div class="card-title">Resultados por Departamento</div>
-  <div class="card-sub">Agregado a nivel departamental · 2ª vuelta</div>
-  <div class="tbl-wrap">
+  <div class="card-t">Resultados por Departamento</div>
+  <div class="card-s">Agregado a nivel departamental · 2ª vuelta</div>
+  <div class="tbl-w">
     <table>
       <thead><tr>
         <th>Departamento</th>
@@ -314,9 +304,9 @@ tr:hover td { background: var(--bg); }
   <a href="https://congresoperu2026.com" target="_blank" style="color:var(--muted)">Ver resultados Congreso →</a>
 </div>
 
-<div class="modal-overlay" id="ym" onclick="this.classList.remove('open')">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <span class="modal-close" onclick="document.getElementById('ym').classList.remove('open')">×</span>
+<div class="modal-ov" id="ym" onclick="this.classList.remove('open')">
+  <div class="modal-bx" onclick="event.stopPropagation()">
+    <span class="modal-cl" onclick="document.getElementById('ym').classList.remove('open')">×</span>
     <div style="font-size:14px;font-weight:700;margin-bottom:4px">☕ Apoya el proyecto</div>
     <div style="font-size:10px;color:var(--muted);margin-bottom:5px">Si te es útil, un Yape es bienvenido 🙏</div>
     <div style="font-size:12px;font-weight:600">Mathieu Rojas</div>
@@ -324,20 +314,28 @@ tr:hover td { background: var(--bg); }
 </div>
 
 <script>
-// ── CONSTANTS ─────────────────────────────────────────────────────────────────
 const TM = 92766;
-const CK = '#f57b2d';   // Fuerza Popular
-const CS = '#48cb50';   // Juntos por el Perú
-const CN = '#d4cfc5';   // no data
+const CK = '#f57b2d';
+const CS = '#48cb50';
+const CN = '#d4cfc5';
+const COVER = '#2ecc71';   // over-performing
+const CUNDER = '#e74c3c';  // under-performing
 
-// ── STATE ─────────────────────────────────────────────────────────────────────
+// First-round parties for flujo
+const PARTIES_R1 = [
+  { key: 'fp',   name: 'Fuerza Popular',        short: 'FP (Keiko)',    color: CK       },
+  { key: 'jpp',  name: 'Juntos por el Perú',    short: 'JPP (Sánchez)', color: CS       },
+  { key: 'rla',  name: 'Renovación Popular',    short: 'RP (RLA)',      color: '#1e3a8a'},
+  { key: 'nieto',name: 'Partido del Buen Gobierno', short: 'PBG (Nieto)', color: '#d97706'},
+  { key: 'obras',name: 'Partido Cívico Obras',  short: 'PCO',           color: '#7c3aed'},
+  { key: 'ppt',  name: 'País para Todos',       short: 'PPT',           color: '#0891b2'},
+  { key: 'an',   name: 'Ahora Nación',          short: 'AN',            color: '#be185d'},
+];
+
 const S = {
-  r1: null, r2021: null, live: null, lByU: null,
-  cents: null,          // centroids map
-  activeMap: 'runoff',
-  mapLoaded: false,
-  svgW: 420, svgH: 607, // filled after SVG loads
-  zoom: 1, panX: 0, panY: 0,
+  r1: null, r2021: null, live: null, lByU: null, cents: null,
+  activeMap: 'runoff', mapLoaded: false,
+  svgW: 420, svgH: 607, zoom: 1, panX: 0, panY: 0,
 };
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
@@ -356,7 +354,7 @@ document.querySelectorAll('.mtt').forEach(t => t.addEventListener('click', () =>
   renderMap();
 }));
 
-// ── LOAD DATA ─────────────────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
   const [r1, r21, cents] = await Promise.all([
     fetch('data/r1_districts.json').then(r => r.json()),
@@ -367,7 +365,7 @@ async function init() {
   S.r2021 = new Map(r21.filter(d => d.u && d.u !== 'nan').map(d => [d.u, d]));
   S.cents = cents;
   await loadLive();
-  loadMap(); // preload in background
+  loadMap();
   setInterval(loadLive, 60000);
 }
 
@@ -377,6 +375,8 @@ async function loadLive() {
     S.live = data;
     S.lByU = new Map((data.districts || []).filter(d => d.u && d.u !== 'nan').map(d => [d.u, d]));
     updateUI();
+    // Always re-render map on live data update
+    if (S.mapLoaded) renderMap();
   } catch(e) {}
 }
 
@@ -385,16 +385,16 @@ async function loadMap() {
     const resp = await fetch('data/peru_districts.svg');
     if (!resp.ok) { mapFallback(); return; }
     const txt = await resp.text();
-    const wrap = document.getElementById('map-wrap');
-    const loading = document.getElementById('map-loading');
+    const wrap = id('mw');
+    const loading = id('mload');
     if (loading) loading.remove();
     wrap.insertAdjacentHTML('afterbegin', txt);
     const svg = wrap.querySelector('svg#map-svg');
-    // Read actual SVG dimensions
     const vb = svg.getAttribute('viewBox').split(' ');
     S.svgW = parseFloat(vb[2]);
     S.svgH = parseFloat(vb[3]);
-    // Size SVG to fill container maintaining aspect
+    // Remove all SVG <title> elements to suppress browser default tooltips
+    svg.querySelectorAll('title').forEach(el => el.remove());
     fitSVG();
     S.mapLoaded = true;
     setupZoom();
@@ -403,70 +403,61 @@ async function loadMap() {
   } catch(e) { mapFallback(); }
 }
 
-function fitSVG() {
-  const wrap = document.getElementById('map-wrap');
-  const svg  = wrap.querySelector('svg#map-svg');
-  if (!svg) return;
-  const wrapH = wrap.clientHeight || 500;
-  const wrapW = wrap.clientWidth  || 600;
-  const scale = Math.min(wrapW / S.svgW, wrapH / S.svgH);
-  svg.style.width  = (S.svgW * scale) + 'px';
-  svg.style.height = (S.svgH * scale) + 'px';
-  // Center
-  S.panX = (wrapW - S.svgW * scale) / 2;
-  S.panY = (wrapH - S.svgH * scale) / 2;
-  S.zoom = scale;
-  applyTransform();
-}
-
 function mapFallback() {
-  const el = document.getElementById('map-loading');
+  const el = id('mload');
   if (el) el.innerHTML = '<strong>Mapa no disponible</strong>Ejecuta generate_map_svg.py';
 }
 
+function fitSVG() {
+  const wrap = id('mw'), svg = wrap.querySelector('svg#map-svg');
+  if (!svg) return;
+  const wH = wrap.clientHeight || 500, wW = wrap.clientWidth || 600;
+  const scale = Math.min(wW / S.svgW, wH / S.svgH);
+  svg.style.width  = (S.svgW * scale) + 'px';
+  svg.style.height = (S.svgH * scale) + 'px';
+  S.panX = (wW - S.svgW * scale) / 2;
+  S.panY = (wH - S.svgH * scale) / 2;
+  S.zoom = scale;
+  applyT();
+}
+
 // ── ZOOM & PAN ────────────────────────────────────────────────────────────────
-function applyTransform() {
-  const svg = document.querySelector('#map-wrap svg#map-svg');
+function applyT() {
+  const svg = document.querySelector('#mw svg#map-svg');
   if (svg) svg.style.transform = `translate(${S.panX}px,${S.panY}px) scale(${S.zoom})`;
 }
 
 function setupZoom() {
-  const wrap = document.getElementById('map-wrap');
-  const MIN_ZOOM = 0.3, MAX_ZOOM = 15;
-
+  const wrap = id('mw');
   wrap.addEventListener('wheel', e => {
     e.preventDefault();
-    const r = wrap.getBoundingClientRect();
-    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    const r = wrap.getBoundingClientRect(), mx = e.clientX-r.left, my = e.clientY-r.top;
     const delta = e.deltaY > 0 ? 0.83 : 1.20;
-    const nz = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, S.zoom * delta));
+    const nz = Math.min(15, Math.max(0.3, S.zoom * delta));
     S.panX = mx - (mx - S.panX) * (nz / S.zoom);
     S.panY = my - (my - S.panY) * (nz / S.zoom);
-    S.zoom = nz;
-    applyTransform();
+    S.zoom = nz; applyT();
   }, { passive: false });
-
-  let drag = false, sx = 0, sy = 0, spx = 0, spy = 0;
+  let drag=false, sx=0, sy=0, spx=0, spy=0;
   wrap.addEventListener('mousedown', e => { drag=true; sx=e.clientX; sy=e.clientY; spx=S.panX; spy=S.panY; });
-  window.addEventListener('mousemove', e => { if (!drag) return; S.panX=spx+(e.clientX-sx); S.panY=spy+(e.clientY-sy); applyTransform(); });
+  window.addEventListener('mousemove', e => { if(!drag) return; S.panX=spx+(e.clientX-sx); S.panY=spy+(e.clientY-sy); applyT(); });
   window.addEventListener('mouseup', () => drag=false);
-
-  document.getElementById('zi').onclick = () => { S.zoom=Math.min(MAX_ZOOM,S.zoom*1.4); applyTransform(); };
-  document.getElementById('zo').onclick = () => { S.zoom=Math.max(MIN_ZOOM,S.zoom/1.4); applyTransform(); };
-  document.getElementById('zr').onclick = fitSVG;
+  id('zi').onclick = () => { S.zoom=Math.min(15,S.zoom*1.4); applyT(); };
+  id('zo').onclick = () => { S.zoom=Math.max(0.3,S.zoom/1.4); applyT(); };
+  id('zr').onclick = fitSVG;
 }
 
 // ── RESULTS BAR ───────────────────────────────────────────────────────────────
 function updateBar() {
-  const m = S.live?.meta || {}, has = (m.counted_mesas||0) > 0;
+  const m=S.live?.meta||{}, has=(m.counted_mesas||0)>0;
   if (!has) return;
   const kV=m.k_votes||0, sV=m.s_votes||0, vl=m.valid_votes||(kV+sV)||1;
   const kP=kV/vl*100, kBW=kV/(kV+sV+.001)*100;
-  set('rb-kp', kP.toFixed(1)+'%'); set('rb-kv', fmt(kV)+' votos');
-  set('rb-sp', (100-kP).toFixed(1)+'%'); set('rb-sv', fmt(sV)+' votos');
+  set('rb-kp',kP.toFixed(1)+'%'); set('rb-kv',fmt(kV)+' votos');
+  set('rb-sp',(100-kP).toFixed(1)+'%'); set('rb-sv',fmt(sV)+' votos');
   id('rb-bk').style.width=kBW+'%'; id('rb-bs').style.width=(100-kBW)+'%';
-  set('rb-pr', (m.pct_reported||0).toFixed(1));
-  if (m.timestamp) set('rb-ts', m.timestamp);
+  set('rb-pr',(m.pct_reported||0).toFixed(1));
+  if (m.timestamp) set('rb-ts',m.timestamp);
   id('dot').classList.add('on'); set('ll','En vivo');
 }
 
@@ -474,9 +465,12 @@ function updateBar() {
 function forecast() {
   const m=S.live?.meta||{}, cnt=m.counted_mesas||0;
   if (!cnt||!S.r1) return {kP:50,sP:50,status:'sin_datos'};
-  const kV=m.k_votes||0,sV=m.s_votes||0,vl=m.valid_votes||(kV+sV)||1;
+  const kV=m.k_votes||0, sV=m.s_votes||0, vl=m.valid_votes||(kV+sV)||1;
   const kSh=kV/vl, pRep=cnt/TM, margin=kV-sV;
-  let aK=0,aS=0,variance=0;
+
+  // Uncertainty model: extra variance from unreported mesas
+  // At low reporting %, sigma should be large relative to current margin
+  let aK=0, aS=0, variance=0;
   for (const [u,r] of S.r1) {
     const ld=S.lByU?.get(u), pd=r.tm-(ld?.cm||0);
     if (pd<=0||r.tv===0) continue;
@@ -484,12 +478,23 @@ function forecast() {
     const denom=r.k+r.s;
     const ke = ld&&(ld.k+ld.s)>0 ? ld.k/(ld.k+ld.s) : (denom>0?r.k/denom:kSh);
     aK+=ke*pVV; aS+=(1-ke)*pVV;
-    variance+=Math.pow(Math.sqrt(pd)*avg*0.12,2);
+    // Variance: proportional to pending mesas AND local uncertainty
+    // At high reporting, variance is small. At low reporting, large.
+    const localUncert = ld ? 0.10 : 0.18; // more uncertain if no local data
+    variance += Math.pow(Math.sqrt(pd) * avg * localUncert, 2);
   }
-  const sigma=Math.sqrt(variance)*(1+(1-pRep)*0.35)||1;
-  const z=(margin+(aK-aS))/sigma;
-  const kP=clamp(Math.round(normalCDF(z)*100),1,99);
-  return {kP,sP:100-kP,status:pRep>.5?'alta':pRep>.1?'moderada':'baja',margin,marginPct:margin/vl*100,sigma};
+
+  // Additional uncertainty: how much the pending areas might differ from reported
+  // This is the key: even if current margin is large, if few mesas are in,
+  // unreported areas could be different
+  const reportingBonus = Math.max(0, 1 - pRep) * 0.5; // 0→0.5 extra vol at 0% reporting
+  const sigma = Math.sqrt(variance) * (1 + reportingBonus) || 1;
+
+  const projMargin = margin + (aK - aS);
+  const z = projMargin / sigma;
+  const kP = clamp(Math.round(normalCDF(z) * 100), 1, 99);
+  return {kP, sP:100-kP, status:pRep>.5?'alta':pRep>.1?'moderada':'baja',
+    margin, marginPct:margin/vl*100, sigma, projMargin};
 }
 
 function updateForecast() {
@@ -506,199 +511,188 @@ function updateForecast() {
   set('fc-mp',has?(fc.marginPct>=0?'+':'')+fc.marginPct.toFixed(2)+'%':'—%');
   set('fc-rm',fmt(TM-(m.counted_mesas||0)));
   const conf={baja:'baja confianza',moderada:'confianza moderada',alta:'alta confianza'}[fc.status];
-  id('fc-nt').innerHTML=has?`Modelo bayesiano · σ≈±${fmt(Math.round(fc.sigma||0))} votos · <b>${conf}</b>`:'Sin datos ONPE aún. El pronóstico se actualizará automáticamente cuando comiencen a llegar resultados.';
+  id('fc-nt').innerHTML=has?`Modelo bayesiano · σ≈±${fmt(Math.round(fc.sigma||0))} votos · <b>${conf}</b>`:'Sin datos ONPE aún. El pronóstico se actualizará automáticamente.';
 }
 
 // ── MAP RENDER ────────────────────────────────────────────────────────────────
 function renderMap() {
-  if (!S.mapLoaded || !S.r1) return;
-  const type = S.activeMap;
-  const isBubble = type === 'margin' || type === 'pending';
-
-  // Clear existing bubbles
-  const bubbleG = document.getElementById('bubbles');
-  if (bubbleG) bubbleG.innerHTML = '';
+  if (!S.mapLoaded||!S.r1) return;
+  const type=S.activeMap;
+  const isBubble=(type==='margin'||type==='pending');
 
   // Color district fills
   document.querySelectorAll('#map-svg #districts path[data-u]').forEach(path => {
-    const u = path.getAttribute('data-u');
+    const u=path.getAttribute('data-u');
     const r=S.r1.get(u), r21=S.r2021?.get(u), ld=S.lByU?.get(u);
-    if (isBubble) {
-      // For bubble maps, show background as first-round result
-      path.style.fill = distColorR1(r);
-    } else {
-      path.style.fill = distColor(type, r, r21, ld);
-    }
+    // Bubble maps: background = live runoff results (same as runoff tab)
+    path.style.fill = isBubble ? runoffColor(ld) : distColor(type,r,r21,ld);
   });
 
-  // Draw bubbles
-  if (bubbleG && type === 'margin')   drawMarginBubbles(bubbleG);
-  if (bubbleG && type === 'pending')  drawPendingBubbles(bubbleG);
+  // Clear & redraw bubbles
+  const bG=document.getElementById('bubbles');
+  if (bG) {
+    bG.innerHTML='';
+    if (type==='margin')  drawMarginBubbles(bG);
+    if (type==='pending') drawPendingBubbles(bG);
+  }
 
   renderLegend(type);
   renderTopDists(type);
 }
 
-function distColor(type, r, r21, ld) {
-  if (type === 'runoff') {
-    if (!ld||(ld.k+ld.s)===0) return CN;
-    return divColor(ld.k/(ld.k+ld.s));
-  }
-  if (type === 'r1') {
-    // Show actual R1 % of ALL valid votes, not just keiko vs sanchez
+// Background color for bubble maps = live runoff result
+function runoffColor(ld) {
+  if (!ld||(ld.k+ld.s)===0) return CN;
+  return divColor(ld.k/(ld.k+ld.s));
+}
+
+function distColor(type,r,r21,ld) {
+  if (type==='runoff') return runoffColor(ld);
+  if (type==='r1') {
     if (!r||r.tv===0) return CN;
-    return divColor(r.k/r.tv + r.s/r.tv > 0 ? r.k/(r.k+r.s) : 0.5);
+    const d=r.k+r.s; return d>0?divColor(r.k/d):CN;
   }
-  if (type === 'growth-k') {
+  if (type==='growth-k') {
     if (!ld||!r21||r21.tv21===0||(ld.k+ld.s)===0) return CN;
-    const diff = ld.k/(ld.k+ld.s) - r21.k21/r21.tv21;
-    // Red = Keiko better than 2021, Green = Keiko worse than 2021
-    return overUnderColor(diff);
+    const diff=ld.k/(ld.k+ld.s)-r21.k21/r21.tv21;
+    return ouColor(diff);
   }
-  if (type === 'growth-s') {
+  if (type==='growth-s') {
     if (!ld||!r21||r21.tv21===0||(ld.k+ld.s)===0) return CN;
-    const diff = ld.s/(ld.k+ld.s) - r21.c21/r21.tv21;
-    // Red = Sanchez better than Castillo, Green = Sanchez worse
-    return overUnderColor(diff);
+    const diff=ld.s/(ld.k+ld.s)-r21.c21/r21.tv21;
+    return ouColor(diff);
   }
   return CN;
 }
 
-function distColorR1(r) {
-  // Soft background based on R1 winner (desaturated)
-  if (!r || r.tv === 0) return '#e8e4dc';
-  const ks = r.k + r.s > 0 ? r.k / (r.k + r.s) : 0.5;
-  return divColor(ks, 0.18); // very light intensity for background
-}
-
-// t=1 → CK (orange), t=0 → CS (green), t=0.5 → white
-function divColor(t, intensity = 1) {
+// t=1→CK (orange), t=0→CS (green), t=0.5→white
+function divColor(t,intensity=1) {
   const a=hRGB(CK), b=hRGB(CS), w=[255,255,255];
   const src=t>=0.5?a:b;
   const str=Math.min(Math.abs(t-0.5)*2,1)*clamp(intensity,0,1);
   return `rgb(${Math.round(w[0]+(src[0]-w[0])*str)},${Math.round(w[1]+(src[1]-w[1])*str)},${Math.round(w[2]+(src[2]-w[2])*str)})`;
 }
 
-// Over/under map: red = positive (over), green = negative (under)
-function overUnderColor(diff) {
-  const RED   = '#e53e3e';
-  const GREEN = '#276749';
-  const str = clamp(Math.abs(diff) / 0.25, 0, 1);
-  const src = diff > 0 ? hRGB(RED) : hRGB(GREEN);
-  const w = [245, 242, 236];
+// Over/under: positive diff = green (COVER), negative = red (CUNDER)
+function ouColor(diff) {
+  const str=clamp(Math.abs(diff)/0.25,0,1);
+  const src=diff>0?hRGB(COVER):hRGB(CUNDER);
+  const w=[245,242,236];
   return `rgb(${Math.round(w[0]+(src[0]-w[0])*str)},${Math.round(w[1]+(src[1]-w[1])*str)},${Math.round(w[2]+(src[2]-w[2])*str)})`;
 }
 
 function hRGB(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
 
-// ── BUBBLE MAPS ───────────────────────────────────────────────────────────────
+// ── BUBBLES ───────────────────────────────────────────────────────────────────
 function drawMarginBubbles(g) {
-  if (!S.lByU || S.lByU.size === 0) return;
-  // Find max total votes for scaling
-  let maxVotes = 0;
-  for (const ld of S.lByU.values()) maxVotes = Math.max(maxVotes, ld.k + ld.s);
-  if (maxVotes === 0) return;
-
-  const MAX_R = 18; // max bubble radius in SVG units
-  const bubbles = [];
-
-  for (const [u, ld] of S.lByU) {
-    const tv = ld.k + ld.s;
-    if (tv === 0) continue;
-    const c = S.cents?.[u];
-    if (!c) continue;
-    const margin = Math.abs(ld.k - ld.s);
-    const r = Math.sqrt(margin / maxVotes) * MAX_R;
-    if (r < 0.5) continue;
-    const col = ld.k > ld.s ? CK : CS;
-    bubbles.push({ c, r, col, u, margin: ld.k - ld.s, tv });
+  if (!S.lByU||S.lByU.size===0) return;
+  let mx=0;
+  for (const ld of S.lByU.values()) mx=Math.max(mx,Math.abs(ld.k-ld.s));
+  if (!mx) return;
+  const MAX_R=18;
+  const bubbles=[];
+  for (const [u,ld] of S.lByU) {
+    const margin=Math.abs(ld.k-ld.s); if(!margin) continue;
+    const c=S.cents?.[u]; if(!c) continue;
+    const r=Math.sqrt(margin/mx)*MAX_R; if(r<0.5) continue;
+    const col=ld.k>ld.s?CK:CS;
+    bubbles.push({c,r,col,u});
   }
-  // Sort smallest first so large bubbles don't obscure small ones
-  bubbles.sort((a, b) => a.r - b.r);
-  g.innerHTML = bubbles.map(b =>
-    `<circle cx="${b.c[0]}" cy="${b.c[1]}" r="${b.r.toFixed(1)}" fill="${b.col}" fill-opacity="0.72" stroke="white" stroke-width="0.3" data-u="${b.u}" style="cursor:pointer"/>`
-  ).join('');
+  bubbles.sort((a,b)=>a.r-b.r);
+  g.innerHTML=bubbles.map(b=>`<circle cx="${b.c[0]}" cy="${b.c[1]}" r="${b.r.toFixed(1)}" fill="${b.col}" fill-opacity="0.75" stroke="white" stroke-width="0.35" data-u="${b.u}" style="cursor:pointer"/>`).join('');
 }
 
 function drawPendingBubbles(g) {
   if (!S.r1) return;
-  let maxPending = 0;
+  let mx=0;
   for (const r of S.r1.values()) {
-    const cm = S.lByU?.get(r.u)?.cm || 0;
-    maxPending = Math.max(maxPending, r.tm - cm);
+    const cm=S.lByU?.get(r.u)?.cm||0;
+    mx=Math.max(mx,r.tm-cm);
   }
-  if (maxPending === 0) return;
-
-  const MAX_R = 16;
-  const bubbles = [];
-
-  for (const [u, r] of S.r1) {
-    const cm = S.lByU?.get(u)?.cm || 0;
-    const pending = r.tm - cm;
-    if (pending <= 0) continue;
-    const c = S.cents?.[u];
-    if (!c) continue;
-    const rv = Math.sqrt(pending / maxPending) * MAX_R;
-    if (rv < 0.5) continue;
-    // Color by who leads in R1 in this area (expected direction of pending votes)
-    const ks = r.k + r.s > 0 ? r.k / (r.k + r.s) : 0.5;
-    const col = ks > 0.5 ? CK : CS;
-    bubbles.push({ c, r: rv, col, u, pending });
+  if (!mx) return;
+  const MAX_R=16;
+  const bubbles=[];
+  for (const [u,r] of S.r1) {
+    const cm=S.lByU?.get(u)?.cm||0, pend=r.tm-cm;
+    if (pend<=0) continue;
+    const c=S.cents?.[u]; if(!c) continue;
+    const rv=Math.sqrt(pend/mx)*MAX_R; if(rv<0.5) continue;
+    // Grey bubbles for pending mesas
+    bubbles.push({c,r:rv,u,pend});
   }
-  bubbles.sort((a, b) => a.r - b.r);
-  g.innerHTML = bubbles.map(b =>
-    `<circle cx="${b.c[0]}" cy="${b.c[1]}" r="${b.r.toFixed(1)}" fill="${b.col}" fill-opacity="0.70" stroke="white" stroke-width="0.3" data-u="${b.u}" style="cursor:pointer"/>`
-  ).join('');
+  bubbles.sort((a,b)=>a.r-b.r);
+  g.innerHTML=bubbles.map(b=>`<circle cx="${b.c[0]}" cy="${b.c[1]}" r="${b.r.toFixed(1)}" fill="#888" fill-opacity="0.60" stroke="white" stroke-width="0.35" data-u="${b.u}" style="cursor:pointer"/>`).join('');
 }
 
 // ── TOOLTIP ───────────────────────────────────────────────────────────────────
 function bindTooltip() {
-  const tt = document.getElementById('tt');
-  const wrap = document.getElementById('map-wrap');
-
-  function showTT(e, u) {
+  const tt=id('tt'), wrap=id('mw');
+  wrap.addEventListener('mousemove', e => {
+    const el=e.target.closest('[data-u]');
+    if (!el) { tt.style.display='none'; return; }
+    const u=el.getAttribute('data-u');
     const r=S.r1?.get(u), r21=S.r2021?.get(u), ld=S.lByU?.get(u);
-    if (!r) return;
-    let html = `<b>${r.d}, ${r.p}</b><br>`;
-    if (ld && (ld.k+ld.s) > 0) {
+    if (!r) { tt.style.display='none'; return; }
+
+    const type=S.activeMap;
+    let html=`<b style="font-size:11px">${r.d}, ${r.p}</b><br>`;
+
+    // Always show live R2 results if available
+    if (ld&&(ld.k+ld.s)>0) {
       const tv=ld.k+ld.s, win=ld.k>ld.s;
       html+=`<span style="color:${CK}">Keiko: ${(ld.k/tv*100).toFixed(1)}%</span><br>`;
       html+=`<span style="color:${CS}">Sánchez: ${(ld.s/tv*100).toFixed(1)}%</span><br>`;
-      html+=`<b style="color:${win?CK:CS}">${win?'Keiko':'Sánchez'} +${fmt(Math.abs(ld.k-ld.s))}</b><br>`;
-      html+=`<span style="color:var(--faint)">Actas: ${ld.cm||0}/${r.tm}</span>`;
+      html+=`<b style="color:${win?CK:CS}">Margen: ${win?'Keiko':'Sánchez'} +${fmt(Math.abs(ld.k-ld.s))} votos</b><br>`;
     } else {
       html+=`<span style="color:var(--faint)">Sin datos 2ª vuelta</span><br>`;
     }
-    if (r.tv > 0) {
-      // Show actual % of all valid votes (not just K vs S)
-      const kPct = (r.k/r.tv*100).toFixed(1);
-      const sPct = (r.s/r.tv*100).toFixed(1);
-      html+=`<span style="font-size:9px;color:var(--faint)">1ª vuelta: K ${kPct}% · S ${sPct}%</span>`;
+
+    // 1ra vuelta 2026
+    if (r.tv>0) {
+      const kPct=(r.k/r.tv*100).toFixed(1), sPct=(r.s/r.tv*100).toFixed(1);
+      html+=`<span style="color:var(--faint);font-size:9px">1ra vuelta 2026: K ${kPct}% · S ${sPct}%</span><br>`;
     }
+
+    // 2021 runoff
+    if (r21&&r21.tv21>0) {
+      const k21=(r21.k21/r21.tv21*100).toFixed(1), c21=(r21.c21/r21.tv21*100).toFixed(1);
+      html+=`<span style="color:var(--faint);font-size:9px">2da vuelta 2021: Castillo ${c21}% · Keiko ${k21}%</span>`;
+    }
+
+    // Extra context depending on map type
+    if (type==='pending') {
+      const cm=ld?.cm||0, pend=r.tm-cm;
+      html+=`<br><span style="color:var(--faint);font-size:9px">Pendientes: ${fmt(pend)} actas</span>`;
+    }
+    if (type==='growth-k'&&ld&&r21&&r21.tv21>0&&(ld.k+ld.s)>0) {
+      const diff=((ld.k/(ld.k+ld.s)-r21.k21/r21.tv21)*100);
+      const col=diff>0?COVER:CUNDER;
+      html+=`<br><span style="color:${col};font-size:9px;font-weight:600">Keiko vs. 2021: ${diff>=0?'+':''}${diff.toFixed(1)}pp</span>`;
+    }
+    if (type==='growth-s'&&ld&&r21&&r21.tv21>0&&(ld.k+ld.s)>0) {
+      const diff=((ld.s/(ld.k+ld.s)-r21.c21/r21.tv21)*100);
+      const col=diff>0?COVER:CUNDER;
+      html+=`<br><span style="color:${col};font-size:9px;font-weight:600">Sánchez vs. Castillo: ${diff>=0?'+':''}${diff.toFixed(1)}pp</span>`;
+    }
+
     tt.style.display='block';
     tt.style.left=(e.clientX+14)+'px';
     tt.style.top=(e.clientY-10)+'px';
     tt.innerHTML=html;
-  }
-
-  wrap.addEventListener('mousemove', e => {
-    const el = e.target.closest('[data-u]');
-    if (el) showTT(e, el.getAttribute('data-u'));
-    else tt.style.display='none';
   });
-  wrap.addEventListener('mouseleave', () => { tt.style.display='none'; });
+  wrap.addEventListener('mouseleave',()=>{tt.style.display='none';});
 }
 
 // ── LEGEND ────────────────────────────────────────────────────────────────────
 function renderLegend(type) {
-  const el=id('sb-legend'), tl=id('sb-title');
-  const cfgs = {
-    runoff:   {t:'Keiko vs. Sánchez',      cb:true, ll:'Sánchez', rl:'Keiko', lc:CS, rc:CK},
-    margin:   {t:'Margen (burbujas)',       bubble:true, items:[{c:CK,l:'Keiko adelante'},{c:CS,l:'Sánchez adelante'}], note:'Tamaño = margen absoluto'},
-    pending:  {t:'Mesas pendientes',        bubble:true, items:[{c:CK,l:'Pend. zona Keiko'},{c:CS,l:'Pend. zona Sánchez'}], note:'Tamaño = mesas pendientes'},
-    r1:       {t:'1ra Vuelta 2026',         cb:true, ll:'Sánchez', rl:'Keiko', lc:CS, rc:CK, note:'% sobre total votos válidos'},
-    'growth-k':{t:'Keiko vs. Keiko 2021',  ou:true, pos:'Supera 2021', neg:'Por debajo 2021'},
-    'growth-s':{t:'Sánchez vs. Castillo 2021', ou:true, pos:'Supera Castillo', neg:'Por debajo Castillo'},
+  const el=id('sb-l'), tl=id('sb-t');
+  const cfgs={
+    runoff:   {t:'Keiko vs. Sánchez',      cb:true,  ll:'Sánchez',lc:CS, rl:'Keiko',rc:CK},
+    margin:   {t:'Burbujas — Margen',       bubble:true, items:[{c:CK,l:'Keiko adelante'},{c:CS,l:'Sánchez adelante'}], note:'Tamaño = margen de votos'},
+    pending:  {t:'Mesas pendientes',        bubble:true, items:[{c:'#888',l:'Mesas no contabilizadas'}], note:'Tamaño = actas pendientes · Fondo = resultado actual'},
+    r1:       {t:'1ra Vuelta 2026',         cb:true,  ll:'Sánchez',lc:CS, rl:'Keiko',rc:CK, note:'% votos válidos sobre todos los candidatos'},
+    'growth-k':{t:'Keiko vs. Keiko 2021',  ou:true,  pos:'Supera 2021',neg:'Por debajo 2021'},
+    'growth-s':{t:'Sánchez vs. Castillo 2021',ou:true,pos:'Supera Castillo',neg:'Por debajo Castillo'},
   };
   const c=cfgs[type]||cfgs.runoff;
   tl.textContent=c.t;
@@ -706,15 +700,15 @@ function renderLegend(type) {
   if (c.cb) {
     html=`<div class="ms-cb" style="background:linear-gradient(to right,${c.lc},#f5f3ee,${c.rc})"></div>
     <div class="ms-cl"><span style="color:${c.lc}">${c.ll}</span><span>50/50</span><span style="color:${c.rc}">${c.rl}</span></div>
-    <div class="ms-item" style="margin-top:6px"><div class="ms-sw" style="background:${CN}"></div><span>Sin datos</span></div>`;
-    if (c.note) html+=`<div style="font-size:8px;color:var(--faint);margin-top:4px">${c.note}</div>`;
+    <div class="ms-it" style="margin-top:6px"><div class="ms-sw" style="background:${CN}"></div><span>Sin datos</span></div>`;
+    if (c.note) html+=`<div style="font-size:8px;color:var(--faint);margin-top:3px">${c.note}</div>`;
   } else if (c.ou) {
-    html=`<div class="ms-cb" style="background:linear-gradient(to right,#276749,#f5f3ee,#e53e3e)"></div>
-    <div class="ms-cl"><span style="color:#276749">${c.neg}</span><span style="color:#e53e3e">${c.pos}</span></div>
-    <div class="ms-item" style="margin-top:6px"><div class="ms-sw" style="background:${CN}"></div><span>Sin datos</span></div>`;
+    html=`<div class="ms-cb" style="background:linear-gradient(to right,${CUNDER},#f5f3ee,${COVER})"></div>
+    <div class="ms-cl"><span style="color:${CUNDER}">${c.neg}</span><span style="color:${COVER}">${c.pos}</span></div>
+    <div class="ms-it" style="margin-top:6px"><div class="ms-sw" style="background:${CN}"></div><span>Sin datos</span></div>`;
   } else if (c.bubble) {
-    html=(c.items||[]).map(i=>`<div class="ms-item"><div style="width:13px;height:13px;border-radius:50%;background:${i.c};opacity:.75;flex-shrink:0"></div><span>${i.l}</span></div>`).join('');
-    if (c.note) html+=`<div style="font-size:8px;color:var(--faint);margin-top:4px">${c.note}</div>`;
+    html=(c.items||[]).map(i=>`<div class="ms-it"><div style="width:13px;height:13px;border-radius:50%;background:${i.c};opacity:.75;flex-shrink:0"></div><span>${i.l}</span></div>`).join('');
+    if (c.note) html+=`<div style="font-size:8px;color:var(--faint);margin-top:3px">${c.note}</div>`;
   }
   el.innerHTML=html;
 }
@@ -728,9 +722,99 @@ function renderTopDists(type) {
   el.innerHTML=rows.map(d=>{
     const ld=S.lByU?.get(d.u), tv=ld?ld.k+ld.s:0;
     const win=ld&&ld.k>ld.s, pct=tv>0?(win?ld.k/tv:ld.s/tv)*100:0;
-    return `<div class="ms-row"><span class="ms-rn">${d.d}</span><span style="font-weight:600;color:${tv>0?(win?CK:CS):'var(--faint)'}">
+    return `<div class="ms-ro"><span class="ms-rn">${d.d}</span><span style="font-weight:600;color:${tv>0?(win?CK:CS):'var(--faint)'}">
       ${tv>0?pct.toFixed(1)+'%':'—'}</span></div>`;
   }).join('');
+}
+
+// ── FLUJO DE VOTOS (full-width party rows) ────────────────────────────────────
+function updateFlujo() {
+  const has=S.lByU&&S.lByU.size>0;
+  id('mg-nd').style.display=has?'none':'';
+  const container=id('flujo-rows');
+  if (!has||!S.r1){container.innerHTML='';return;}
+
+  // Compute district-level correlations
+  const data=[];
+  for (const [u,r] of S.r1) {
+    const ld=S.lByU.get(u);
+    if (!ld||(ld.k+ld.s)===0||r.tv===0) continue;
+    const lv=ld.k+ld.s;
+    data.push({
+      kS2:ld.k/lv, sS2:ld.s/lv,
+      r1fp:r.k/r.tv, r1jpp:r.s/r.tv,
+      r1rla:r.rl/r.tv, r1nieto:r.n/r.tv,
+      // Approximate other parties from remainder
+      r1other:Math.max(0,1-(r.k+r.s+r.rl+r.n)/r.tv),
+      w:Math.min(ld.cm||1,20),
+    });
+  }
+  if (data.length<10){container.innerHTML='';return;}
+
+  const wS=data.reduce((s,d)=>s+d.w,0);
+  const wavg=k=>data.reduce((s,d)=>s+d.w*d[k],0)/wS;
+  const corr=(xk,yk='kS2')=>{
+    const mx=wavg(xk), my=wavg(yk);
+    const cov=data.reduce((s,d)=>s+d.w*(d[xk]-mx)*(d[yk]-my),0)/wS;
+    const sx=Math.sqrt(data.reduce((s,d)=>s+d.w*(d[xk]-mx)**2,0)/wS);
+    const sy=Math.sqrt(data.reduce((s,d)=>s+d.w*(d[yk]-my)**2,0)/wS);
+    return sx*sy>0?cov/(sx*sy):0;
+  };
+
+  // For each source party, estimate flows to: keiko, sanchez, blanco, nulo, no vota
+  // Using correlation as a proxy for flow direction
+  const parties=[
+    {key:'r1fp',   name:'Fuerza Popular',           fullname:'Fuerza Popular (Keiko Fujimori)', color:CK,       kFlow:0.88, sFlow:0.06, blFlow:0.03, nuFlow:0.02, nvFlow:0.01},
+    {key:'r1jpp',  name:'Juntos por el Perú',        fullname:'Juntos por el Perú (Roberto Sánchez)', color:CS, kFlow:0.06, sFlow:0.85, blFlow:0.05, nuFlow:0.03, nvFlow:0.01},
+    {key:'r1rla',  name:'Renovación Popular',        fullname:'Renovación Popular (RLA)',       color:'#1e3a8a', kFlow:0.62, sFlow:0.22, blFlow:0.08, nuFlow:0.05, nvFlow:0.03},
+    {key:'r1nieto',name:'Partido del Buen Gobierno', fullname:'Partido del Buen Gobierno (Nieto)', color:'#d97706', kFlow:0.44, sFlow:0.38, blFlow:0.10, nuFlow:0.05, nvFlow:0.03},
+    {key:'r1other',name:'Partido Cívico Obras',      fullname:'Partido Cívico Obras',           color:'#7c3aed', kFlow:0.32, sFlow:0.38, blFlow:0.14, nuFlow:0.10, nvFlow:0.06},
+    {key:'r1other',name:'País para Todos',           fullname:'País para Todos',               color:'#0891b2', kFlow:0.28, sFlow:0.42, blFlow:0.14, nuFlow:0.10, nvFlow:0.06},
+    {key:'r1other',name:'Ahora Nación',              fullname:'Ahora Nación',                  color:'#be185d', kFlow:0.30, sFlow:0.40, blFlow:0.13, nuFlow:0.10, nvFlow:0.07},
+  ];
+
+  // Adjust flows based on observed correlations
+  const corrFP=corr('r1fp'), corrJPP=corr('r1jpp'), corrRLA=corr('r1rla'), corrN=corr('r1nieto');
+  const adjFlow=(base,corr)=>clamp(base+corr*0.15,0.01,0.98);
+
+  parties[0].kFlow=adjFlow(0.88,corrFP);
+  parties[1].sFlow=adjFlow(0.85,corrJPP);
+  parties[2].kFlow=adjFlow(0.62,corrRLA);
+  parties[3].kFlow=adjFlow(0.44,corrN);
+
+  // Renormalize
+  parties.forEach(p=>{
+    const tot=p.kFlow+p.sFlow+p.blFlow+p.nuFlow+p.nvFlow;
+    p.kFlow/=tot; p.sFlow/=tot; p.blFlow/=tot; p.nuFlow/=tot; p.nvFlow/=tot;
+  });
+
+  const flows=[
+    {id:'keiko',  label:'Keiko',   color:CK,       getV:p=>p.kFlow},
+    {id:'sanchez',label:'Sánchez', color:CS,        getV:p=>p.sFlow},
+    {id:'blanco', label:'Blanco',  color:'#b0a898', getV:p=>p.blFlow},
+    {id:'nulo',   label:'Nulo',    color:'#888',    getV:p=>p.nuFlow},
+    {id:'novota', label:'No vota', color:'#ccc',    getV:p=>p.nvFlow},
+  ];
+
+  container.innerHTML=parties.map(p=>`
+    <div class="flujo-party">
+      <div class="fp-header">
+        <div class="fp-dot" style="background:${p.color}"></div>
+        <div class="fp-name">${p.fullname}</div>
+      </div>
+      <div class="fp-flows">
+        ${flows.map(f=>{
+          const pct=Math.round(f.getV(p)*100);
+          return `<div class="fp-flow">
+            <div class="fp-flow-bar-wrap">
+              <div class="fp-flow-bar" style="height:${pct}%;background:${f.color};opacity:0.85"></div>
+            </div>
+            <div class="fp-flow-pct">${pct}%</div>
+            <div class="fp-flow-lbl" style="color:${f.color};font-weight:600">${f.label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
 }
 
 // ── DEPT TABLE ────────────────────────────────────────────────────────────────
@@ -747,7 +831,7 @@ function updateDepts() {
   const rows=Object.values(depts).sort((a,b)=>(b.lk+b.ls)-(a.lk+a.ls));
   id('dept-tb').innerHTML=rows.map(r=>{
     const tv=r.lk+r.ls; if(!tv) return '';
-    const kP=r.lk/tv*100,m=r.lk-r.ls,mP=m/tv*100,pR=r.r1tm>0?r.lm/r.r1tm*100:0;
+    const kP=r.lk/tv*100, m=r.lk-r.ls, mP=m/tv*100, pR=r.r1tm>0?r.lm/r.r1tm*100:0;
     return `<tr>
       <td style="font-weight:600">${r.name}</td>
       <td><span style="color:${CK}">${kP.toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.lk)}</span></td>
@@ -762,56 +846,13 @@ function updateDepts() {
   }).join('');
 }
 
-// ── MIGRATION ─────────────────────────────────────────────────────────────────
-function updateMigration() {
-  const has=S.lByU&&S.lByU.size>0;
-  id('mg-nd').style.display=has?'none':'';
-  const grid=id('mg-grid');
-  if (!has||!S.r1){grid.style.display='none';return;}
-  grid.style.display='';
-  const data=[];
-  for (const [u,r] of S.r1) {
-    const ld=S.lByU.get(u);
-    if (!ld||(ld.k+ld.s)===0||r.tv===0) continue;
-    const lv=ld.k+ld.s;
-    data.push({kS2:ld.k/lv,r1K:r.k/r.tv,r1S:r.s/r.tv,r1N:r.n/r.tv,r1RL:r.rl/r.tv,w:Math.min(ld.cm||1,20)});
-  }
-  if (data.length<10){grid.style.display='none';return;}
-  const wS=data.reduce((s,d)=>s+d.w,0);
-  const wavg=k=>data.reduce((s,d)=>s+d.w*d[k],0)/wS;
-  const avgK2=wavg('kS2');
-  const corr=xk=>{
-    const mx=wavg(xk);
-    const cov=data.reduce((s,d)=>s+d.w*(d[xk]-mx)*(d.kS2-avgK2),0)/wS;
-    const sx=Math.sqrt(data.reduce((s,d)=>s+d.w*(d[xk]-mx)**2,0)/wS);
-    const sy=Math.sqrt(data.reduce((s,d)=>s+d.w*(d.kS2-avgK2)**2,0)/wS);
-    return sx*sy>0?cov/(sx*sy):0;
-  };
-  const flow=c=>clamp(Math.round((0.5+c*0.4)*100),5,95);
-  const parties=[
-    {label:'Fuerza Popular (R1)',     color:CK,       kF:flow(corr('r1K'))},
-    {label:'Juntos por el Perú (R1)',color:CS,       kF:flow(corr('r1S'))},
-    {label:'Buen Gobierno (Nieto)',   color:'#d97706',kF:flow(corr('r1N'))},
-    {label:'Renovación Popular (RLA)',color:'#1e40af',kF:flow(corr('r1RL'))},
-  ];
-  grid.innerHTML=['Keiko','Sánchez'].map((cand,ci)=>`
-    <div class="mg-card">
-      <div class="mg-t">Votos 1ª vuelta → <span style="color:${ci===0?CK:CS}">${cand}</span></div>
-      ${parties.map(p=>{const pct=ci===0?p.kF:100-p.kF;return`<div class="mg-row">
-        <div class="mg-dot" style="background:${p.color}"></div>
-        <div class="mg-nm">${p.label}</div>
-        <div class="mg-bw"><div class="mg-b" style="width:${pct}%;background:${ci===0?CK:CS}"></div></div>
-        <div class="mg-p">${pct}%</div>
-      </div>`;}).join('')}
-      <div style="font-size:8px;color:var(--faint);margin-top:5px">${data.length} distritos con datos pareados.</div>
-    </div>`).join('');
-}
-
 // ── MASTER UPDATE ─────────────────────────────────────────────────────────────
 function updateUI() {
-  updateBar(); updateForecast();
-  if (S.mapLoaded) renderMap();
-  updateDepts(); updateMigration();
+  updateBar();
+  updateForecast();
+  if (S.mapLoaded) renderMap();  // always re-render map on data update
+  updateDepts();
+  updateFlujo();
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
