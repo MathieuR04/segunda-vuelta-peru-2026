@@ -12,8 +12,8 @@
   --text: #1a1a18; --muted: #6b6b67; --faint: #9b9b97;
   --keiko:   #f57b2d;
   --sanchez: #48cb50;
-  --over:    #2ecc71;   /* over-performing = bright green */
-  --under:   #e74c3c;   /* under-performing = bright red */
+  --over:    #2ecc71;
+  --under:   #e74c3c;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -24,6 +24,7 @@
 }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 10px; font-size: 13px; }
 
+/* HEADER */
 .hdr { text-align: center; margin-bottom: 8px; }
 .hdr h1 { font-size: 15px; font-weight: 600; }
 .hdr .by { font-size: 10px; color: var(--faint); margin-top: 2px; }
@@ -48,31 +49,44 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .tabs { display: flex; gap: 4px; justify-content: center; margin-bottom: 8px; flex-wrap: wrap; }
 .tab { font-size: 10px; padding: 3px 11px; border: 0.5px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--surface); color: var(--muted); }
 .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
-.panel { display: none; }
-.panel.active { display: block; }
+.panel { display: none; } .panel.active { display: block; }
 
 /* CARD */
 .card { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
 .card-t { font-size: 11px; font-weight: 600; margin-bottom: 1px; }
 .card-s { font-size: 8px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
 
-/* FORECAST */
-.fc-w { max-width: 580px; margin: 0 auto; }
-.fc-h { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 10px; }
+/* NYT-STYLE NEEDLE */
+.fc-w { max-width: 660px; margin: 0 auto; }
+.fc-top { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: start; margin-bottom: 12px; }
 .fc-l { text-align: left; } .fc-r { text-align: right; } .fc-c { text-align: center; }
 .fc-py { font-size: 8px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
 .fc-nm { font-size: 11px; font-weight: 600; }
-.fc-pb { font-size: 26px; font-weight: 700; line-height: 1; }
-.fc-pl { font-size: 8px; color: var(--muted); }
-.fc-vs { font-size: 9px; color: var(--faint); }
-.fc-st { font-size: 9px; color: var(--muted); }
-.fc-mc { font-size: 8px; color: var(--faint); }
-#nw { width: 100%; max-width: 460px; margin: 0 auto 8px; }
+.fc-prob-big { font-size: 30px; font-weight: 700; line-height: 1; }
+.fc-prob-sub { font-size: 8px; color: var(--muted); }
+.fc-vs  { font-size: 9px; color: var(--faint); margin-bottom: 2px; }
+.fc-st  { font-size: 9px; color: var(--muted); }
+.fc-mc  { font-size: 8px; color: var(--faint); }
+
+/* Needle SVG wrapper */
+#needle-wrap { width: 100%; max-width: 600px; margin: 0 auto 4px; }
+
+/* Margin callout below needle */
+.margin-callout {
+  text-align: center; margin: 4px 0 8px;
+  font-size: 11px; font-weight: 600; color: var(--text);
+}
+.margin-ci {
+  text-align: center; font-size: 9px; color: var(--muted); margin-bottom: 8px;
+}
+
+/* Win prob bar */
 .pb-w { display: flex; height: 17px; border-radius: 9px; overflow: hidden; border: 0.5px solid var(--border); margin: 6px 0; }
 .pb-k { background: var(--keiko);   display: flex; align-items: center; justify-content: center; transition: width .8s cubic-bezier(.4,0,.2,1); }
 .pb-s { background: var(--sanchez); display: flex; align-items: center; justify-content: center; transition: width .8s cubic-bezier(.4,0,.2,1); }
 .pb-l { font-size: 9px; font-weight: 600; color: white; padding: 0 6px; white-space: nowrap; }
-.fc-ss { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; margin-top: 8px; }
+
+.fc-ss { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; margin-top: 8px; }
 .fc-s  { background: var(--bg); border-radius: 7px; padding: 6px; text-align: center; }
 .fc-sv { font-size: 12px; font-weight: 600; }
 .fc-sl { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
@@ -93,15 +107,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 }
 #mw:active { cursor: grabbing; }
 #mw > svg#map-svg { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
-/* Suppress SVG title tooltip boxes */
-#mw svg title { display: none; pointer-events: none; }
-
 .zbw { position: absolute; bottom: 8px; right: 8px; display: flex; flex-direction: column; gap: 2px; z-index: 10; }
 .zb  { width: 24px; height: 24px; border-radius: 5px; background: var(--surface); border: 0.5px solid var(--border); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
 .zb:hover { background: var(--bg); }
-
 #tt { position: fixed; pointer-events: none; z-index: 200; background: var(--surface); border: 0.5px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 10px; line-height: 1.75; max-width: 210px; display: none; box-shadow: 0 3px 14px rgba(0,0,0,.13); }
-
 .map-sb { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 10px; }
 .ms-t  { font-size: 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
 .ms-cb { height: 8px; border-radius: 3px; margin: 2px 0; }
@@ -112,25 +121,27 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .ms-ro:last-child { border-bottom: none; }
 .ms-rn { color: var(--muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* FLUJO — full-width party rows */
-.flujo-party {
-  background: var(--surface); border: 0.5px solid var(--border-light);
-  border-radius: 10px; padding: 10px 14px; margin-bottom: 6px;
-}
-.fp-header {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-}
+/* FLUJO */
+.flujo-party { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 10px 14px; margin-bottom: 6px; }
+.fp-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .fp-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.fp-name { font-size: 11px; font-weight: 600; }
-.fp-pct  { font-size: 9px; color: var(--muted); margin-left: auto; }
-.fp-flows { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-.fp-flow { display: flex; flex-direction: column; gap: 3px; }
-.fp-flow-lbl { font-size: 8px; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.fp-flow-bar-wrap { height: 40px; display: flex; align-items: flex-end; background: var(--bg); border-radius: 4px; overflow: hidden; }
-.fp-flow-bar { width: 100%; border-radius: 3px 3px 0 0; transition: height .5s; }
-.fp-flow-pct { font-size: 9px; font-weight: 600; text-align: center; color: var(--text); }
+.fp-nm  { font-size: 11px; font-weight: 600; }
+.fp-flows { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
+.fp-flow { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.fp-flow-lbl { font-size: 8px; color: var(--muted); text-align: center; font-weight: 600; }
+.fp-flow-bw { width: 100%; height: 48px; display: flex; align-items: flex-end; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.fp-flow-bar { width: 100%; border-radius: 3px 3px 0 0; transition: height .6s; }
+.fp-flow-pct { font-size: 10px; font-weight: 700; color: var(--text); }
 
-/* DEPT TABLE */
+/* METHODOLOGY */
+.meth { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 14px; margin-bottom: 8px; font-size: 10px; line-height: 1.7; color: var(--muted); }
+.meth h3 { font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.meth h4 { font-size: 10px; font-weight: 600; color: var(--text); margin: 10px 0 4px; }
+.meth ul { padding-left: 16px; }
+.meth li { margin-bottom: 3px; }
+.meth code { background: var(--bg); padding: 1px 4px; border-radius: 3px; font-size: 9px; font-family: monospace; }
+
+/* TABLE */
 .tbl-w { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 5px; }
 th { font-weight: 600; color: var(--muted); text-align: left; padding: 4px 5px; border-bottom: 0.5px solid var(--border); font-size: 8px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
@@ -150,28 +161,16 @@ tr:hover td { background: var(--bg); }
 
 <div class="hdr">
   <h1>🇵🇪 Segunda Vuelta Perú 2026 — Seguimiento en Vivo</h1>
-  <div class="by">
-    Por <a href="https://x.com/KhamaRamaq" target="_blank">Mathieu Rojas</a> ·
-    <a href="https://www.linkedin.com/in/mathieu-rojas-egoavil-889a64293/" target="_blank">LinkedIn</a> ·
-    <span style="cursor:pointer;text-decoration:underline;color:var(--muted)" onclick="document.getElementById('ym').classList.add('open')">☕ Yape</span>
-  </div>
+  <div class="by">Por <a href="https://x.com/KhamaRamaq" target="_blank">Mathieu Rojas</a> · <a href="https://www.linkedin.com/in/mathieu-rojas-egoavil-889a64293/" target="_blank">LinkedIn</a> · <span style="cursor:pointer;text-decoration:underline;color:var(--muted)" onclick="document.getElementById('ym').classList.add('open')">☕ Yape</span></div>
 </div>
 
 <div class="rb">
-  <div class="rb-c">
-    <div class="rb-lbl" style="color:var(--keiko)">Fuerza Popular</div>
-    <div class="rb-pct" id="rb-kp" style="color:var(--keiko)">—</div>
-    <div class="rb-vts" id="rb-kv">—</div>
-  </div>
+  <div class="rb-c"><div class="rb-lbl" style="color:var(--keiko)">Fuerza Popular</div><div class="rb-pct" id="rb-kp" style="color:var(--keiko)">—</div><div class="rb-vts" id="rb-kv">—</div></div>
   <div class="rb-mid">
     <div class="rb-bar"><div class="rb-bk" id="rb-bk" style="width:50%"></div><div class="rb-bs" id="rb-bs" style="width:50%"></div></div>
     <div class="rb-meta"><span class="dot" id="dot"></span><span id="ll">En espera</span> · <span id="rb-pr">—</span>% escrutado · <span id="rb-ts"></span></div>
   </div>
-  <div class="rb-c" style="text-align:right">
-    <div class="rb-lbl" style="color:var(--sanchez)">Juntos por el Perú</div>
-    <div class="rb-pct" id="rb-sp" style="color:var(--sanchez)">—</div>
-    <div class="rb-vts" id="rb-sv">—</div>
-  </div>
+  <div class="rb-c" style="text-align:right"><div class="rb-lbl" style="color:var(--sanchez)">Juntos por el Perú</div><div class="rb-pct" id="rb-sp" style="color:var(--sanchez)">—</div><div class="rb-vts" id="rb-sv">—</div></div>
 </div>
 
 <div class="tabs">
@@ -179,68 +178,77 @@ tr:hover td { background: var(--bg); }
   <div class="tab" data-tab="mapas">Mapas</div>
   <div class="tab" data-tab="flujo">Flujo de votos</div>
   <div class="tab" data-tab="departamentos">Departamentos</div>
+  <div class="tab" data-tab="metodologia">Metodología</div>
 </div>
 
 <!-- PRONÓSTICO -->
 <div class="panel active" id="panel-pronostico">
 <div class="card fc-w">
   <div class="card-t">Pronóstico Electoral</div>
-  <div class="card-s">Modelo estadístico · R1 2026 + SV 2021 · Se actualiza automáticamente</div>
-  <div class="fc-h">
+  <div class="card-s">MODELO JERÁRQUICO BAYESIANO · DATOS A NIVEL DE MESA DE VOTACIÓN · R1 2026 + SV 2021 + RESULTADOS EN VIVO</div>
+
+  <div class="fc-top">
     <div class="fc-l">
       <div class="fc-py" style="color:var(--keiko)">Fuerza Popular</div>
       <div class="fc-nm">Keiko Fujimori</div>
-      <div class="fc-pb" id="fc-kp" style="color:var(--keiko)">—</div>
-      <div class="fc-pl">prob. de ganar</div>
+      <div class="fc-prob-big" id="fc-kp" style="color:var(--keiko)">—</div>
+      <div class="fc-prob-sub">prob. de ganar</div>
     </div>
     <div class="fc-c">
       <div class="fc-vs">vs.</div>
-      <div class="fc-st" id="fc-st">Esperando datos…</div>
+      <div class="fc-st" id="fc-st">Cargando modelo…</div>
       <div class="fc-mc" id="fc-mc">0 / 92,766 mesas</div>
     </div>
     <div class="fc-r">
       <div class="fc-py" style="color:var(--sanchez)">Juntos por el Perú</div>
       <div class="fc-nm">Roberto Sánchez</div>
-      <div class="fc-pb" id="fc-sp" style="color:var(--sanchez)">—</div>
-      <div class="fc-pl">prob. de ganar</div>
+      <div class="fc-prob-big" id="fc-sp" style="color:var(--sanchez)">—</div>
+      <div class="fc-prob-sub">prob. de ganar</div>
     </div>
   </div>
-  <div id="nw">
-    <svg viewBox="0 0 500 210" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%"   stop-color="#f57b2d"/>
-          <stop offset="43%"  stop-color="#f9b888"/>
-          <stop offset="50%"  stop-color="#e8e3d8"/>
-          <stop offset="57%"  stop-color="#90d898"/>
-          <stop offset="100%" stop-color="#48cb50"/>
-        </linearGradient>
-      </defs>
-      <path d="M55,195 A195,195 0 0,1 445,195" fill="none" stroke="#ddd9cf" stroke-width="26" stroke-linecap="round"/>
-      <path d="M55,195 A195,195 0 0,1 445,195" fill="none" stroke="url(#gg)" stroke-width="24" stroke-linecap="round"/>
-      <text x="46"  y="212" text-anchor="middle" font-family="system-ui" font-size="10" fill="#f57b2d" font-weight="600">KEIKO</text>
-      <text x="454" y="212" text-anchor="middle" font-family="system-ui" font-size="10" fill="#48cb50" font-weight="600">SÁNCHEZ</text>
-      <text x="250" y="212" text-anchor="middle" font-family="system-ui" font-size="9"  fill="#9b9b97">50/50</text>
-      <g id="ng" transform="rotate(-90,250,195)">
-        <polygon points="250,195 246,58 254,58" fill="#2a2520" opacity=".85"/>
-        <circle cx="250" cy="195" r="8" fill="#2a2520"/>
-        <circle cx="250" cy="195" r="3.5" fill="white"/>
+
+  <!-- NYT-style needle with distribution -->
+  <div id="needle-wrap">
+    <svg id="needle-svg" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg">
+      <!-- Distribution histogram (background) -->
+      <g id="dist-hist"></g>
+      <!-- CI bands -->
+      <g id="ci-bands"></g>
+      <!-- Arc -->
+      <path id="arc-bg" d="" fill="none" stroke="#e0ddd5" stroke-width="3" stroke-linecap="round"/>
+      <!-- Historical reference lines (2021) -->
+      <g id="ref-lines"></g>
+      <!-- Needle -->
+      <g id="needle-g">
+        <line id="needle-line" x1="300" y1="240" x2="300" y2="60" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="300" cy="240" r="5" fill="#1a1a18"/>
       </g>
-      <text id="nkp" x="128" y="142" text-anchor="middle" font-family="system-ui" font-size="13" fill="#f57b2d" font-weight="600">—%</text>
-      <text id="nsp" x="372" y="142" text-anchor="middle" font-family="system-ui" font-size="13" fill="#48cb50" font-weight="600">—%</text>
-      <text id="nmg" x="250" y="170" text-anchor="middle" font-family="system-ui" font-size="10" fill="#6b6b67">Esperando resultados…</text>
+      <!-- Labels -->
+      <text x="30"  y="255" text-anchor="middle" font-family="system-ui" font-size="10" fill="#f57b2d" font-weight="600">KEIKO</text>
+      <text x="570" y="255" text-anchor="middle" font-family="system-ui" font-size="10" fill="#48cb50" font-weight="600">SÁNCHEZ</text>
+      <text x="300" y="255" text-anchor="middle" font-family="system-ui" font-size="9"  fill="#9b9b97" id="needle-zero-lbl">0</text>
+      <!-- Margin labels on arc -->
+      <g id="arc-labels"></g>
+      <!-- Forecast range label -->
+      <text id="fc-range-lbl" x="300" y="30" text-anchor="middle" font-family="system-ui" font-size="9" fill="#6b6b67">Rango de estimaciones</text>
     </svg>
   </div>
+
+  <div class="margin-callout" id="margin-callout">Esperando datos…</div>
+  <div class="margin-ci" id="margin-ci"></div>
+
   <div class="pb-w">
     <div class="pb-k" id="pb-k" style="width:50%"><span class="pb-l" id="pb-lk"></span></div>
     <div class="pb-s" id="pb-s" style="width:50%"><span class="pb-l" id="pb-ls"></span></div>
   </div>
+
   <div class="fc-ss">
-    <div class="fc-s"><div class="fc-sv" id="fc-mv">—</div><div class="fc-sl">Margen (votos)</div></div>
-    <div class="fc-s"><div class="fc-sv" id="fc-mp">—%</div><div class="fc-sl">Margen (% válido)</div></div>
+    <div class="fc-s"><div class="fc-sv" id="fc-curr">—</div><div class="fc-sl">Margen actual</div></div>
+    <div class="fc-s"><div class="fc-sv" id="fc-proj">—</div><div class="fc-sl">Margen proyectado</div></div>
+    <div class="fc-s"><div class="fc-sv" id="fc-sigma">—</div><div class="fc-sl">Incertidumbre (σ)</div></div>
     <div class="fc-s"><div class="fc-sv" id="fc-rm">92,766</div><div class="fc-sl">Mesas pendientes</div></div>
   </div>
-  <div class="fc-nt" id="fc-nt">Sin datos ONPE aún. El pronóstico se actualizará automáticamente.</div>
+  <div class="fc-nt" id="fc-nt">Cargando modelo de pronóstico…</div>
 </div>
 </div>
 
@@ -275,8 +283,8 @@ tr:hover td { background: var(--bg); }
 <!-- FLUJO -->
 <div class="panel" id="panel-flujo">
   <div class="card-t" style="margin-bottom:4px">Flujo de Votos desde 1ª Vuelta</div>
-  <div class="card-s" style="margin-bottom:10px">ESTIMACIÓN DE MIGRACIÓN · CORRELACIONES A NIVEL DE DISTRITO</div>
-  <div class="no-data" id="mg-nd"><strong>Sin datos de 2ª vuelta aún</strong>Cuando lleguen resultados estimaremos cómo migran los votos de cada partido.</div>
+  <div class="card-s" style="margin-bottom:10px">REGRESIÓN ECOLÓGICA WITHIN-DISTRICT · DATOS A NIVEL DE MESA DE VOTACIÓN</div>
+  <div class="no-data" id="mg-nd"><strong>Sin datos de 2ª vuelta aún</strong>Ejecuta flows_model.py para generar data/flows.json</div>
   <div id="flujo-rows"></div>
 </div>
 
@@ -299,6 +307,49 @@ tr:hover td { background: var(--bg); }
 </div>
 </div>
 
+<!-- METODOLOGÍA -->
+<div class="panel" id="panel-metodologia">
+<div class="meth">
+  <h3>Metodología del Pronóstico</h3>
+  <p>El pronóstico utiliza un modelo jerárquico bayesiano con datos a nivel de mesa de votación. A continuación se describe cada componente.</p>
+
+  <h4>Datos utilizados</h4>
+  <ul>
+    <li><b>R1 2026 (nivel de mesa):</b> Votos por partido en cada una de las 92,766 mesas de votación. Permite conocer la composición exacta del electorado en cada mesa.</li>
+    <li><b>R2 2026 en vivo (nivel de mesa):</b> Resultados de la segunda vuelta conforme van llegando. Cada mesa contabilizada es un punto de observación para calibrar el modelo.</li>
+    <li><b>R2 2021 (nivel de mesa, 93% de cobertura):</b> Resultados Castillo vs. Keiko por mesa. Actúa como ancla bayesiana — antes de que lleguen datos de una mesa, usamos 2021 como prior, ajustado por el swing nacional observado en 2026.</li>
+  </ul>
+
+  <h4>Arquitectura del modelo</h4>
+  <p>Para cada mesa no contabilizada <code>t</code> en distrito <code>d</code>, provincia <code>p</code>, departamento <code>k</code>:</p>
+  <ul>
+    <li><b>Predicción nacional:</b> OLS ponderado con las shares de R1 como regresores y la share de Keiko en 2021 como covariable adicional.</li>
+    <li><b>Residuales geográficos:</b> Calculamos el residual medio del modelo nacional para cada nivel geográfico (mesa → local → distrito → provincia → departamento). Esto captura que los votantes de Nieto en Lima son distintos a los de Puno.</li>
+    <li><b>Combinación bayesiana:</b> Las predicciones de cada nivel se combinan mediante pesos de precisión (inverso de la varianza): <code>μ = Σ(prec_i × μ_i) / Σ(prec_i)</code>. Niveles con más datos tienen mayor precisión y dominan la predicción. El prior 2021 equivale a ~8 mesas virtuales.</li>
+    <li><b>Jerarquía de fallback (en orden):</b> Datos de mesas contabilizadas → nivel de local → distrito (ubigeo único) → provincia (ubigeo único) → departamento → nacional → 2021.</li>
+  </ul>
+
+  <h4>Incertidumbre</h4>
+  <p>Para cada mesa no contabilizada:</p>
+  <ul>
+    <li><code>σ²(t) = 1/Σ(precisiones) + σ²_residual_nacional</code></li>
+    <li>La incertidumbre crece cuando: hay pocas mesas contabilizadas en el área, el distrito se desvía del modelo nacional, o la mesa no tiene par en 2021.</li>
+    <li>10,000 simulaciones Monte Carlo dan la distribución completa del margen final → IC 95% e IC 80%.</li>
+  </ul>
+
+  <h4>Flujo de votos</h4>
+  <p>Regresión OLS <i>within-district</i> (variables demeaned por distrito) para eliminar la falacia ecológica. Estima qué fracción de los votos de cada partido en R1 van a Keiko, Sánchez, blanco, nulo, o abstención en R2. Bootstrap con 200 iteraciones para intervalos de confianza.</p>
+
+  <h4>Limitaciones</h4>
+  <ul>
+    <li>El modelo asume que los residuales son i.i.d. dentro de cada nivel geográfico.</li>
+    <li>La inferencia ecológica (de tabla a votante individual) tiene limitaciones inherentes.</li>
+    <li>Eventos de último momento (escándalos, movilizaciones) no se capturan.</li>
+    <li>El prior 2021 puede estar desactualizado si el panorama político cambió estructuralmente.</li>
+  </ul>
+</div>
+</div>
+
 <div style="text-align:center;font-size:9px;color:var(--faint);margin-top:6px;padding-bottom:14px">
   Segunda Vuelta Perú 2026 · Datos: <a href="https://resultadoelectoral.onpe.gob.pe" target="_blank" style="color:var(--muted)">ONPE</a> ·
   <a href="https://congresoperu2026.com" target="_blank" style="color:var(--muted)">Ver resultados Congreso →</a>
@@ -315,27 +366,14 @@ tr:hover td { background: var(--bg); }
 
 <script>
 const TM = 92766;
-const CK = '#f57b2d';
-const CS = '#48cb50';
-const CN = '#d4cfc5';
-const COVER = '#2ecc71';   // over-performing
-const CUNDER = '#e74c3c';  // under-performing
-
-// First-round parties for flujo
-const PARTIES_R1 = [
-  { key: 'fp',   name: 'Fuerza Popular',        short: 'FP (Keiko)',    color: CK       },
-  { key: 'jpp',  name: 'Juntos por el Perú',    short: 'JPP (Sánchez)', color: CS       },
-  { key: 'rla',  name: 'Renovación Popular',    short: 'RP (RLA)',      color: '#1e3a8a'},
-  { key: 'nieto',name: 'Partido del Buen Gobierno', short: 'PBG (Nieto)', color: '#d97706'},
-  { key: 'obras',name: 'Partido Cívico Obras',  short: 'PCO',           color: '#7c3aed'},
-  { key: 'ppt',  name: 'País para Todos',       short: 'PPT',           color: '#0891b2'},
-  { key: 'an',   name: 'Ahora Nación',          short: 'AN',            color: '#be185d'},
-];
+const CK = '#f57b2d', CS = '#48cb50', CN = '#d4cfc5';
+const COVER = '#2ecc71', CUNDER = '#e74c3c';
 
 const S = {
-  r1: null, r2021: null, live: null, lByU: null, cents: null,
-  activeMap: 'runoff', mapLoaded: false,
-  svgW: 420, svgH: 607, zoom: 1, panX: 0, panY: 0,
+  r1:null, r2021:null, live:null, lByU:null, cents:null,
+  forecast:null, flows:null,
+  activeMap:'runoff', mapLoaded:false,
+  svgW:420, svgH:607, zoom:1, panX:0, panY:0,
 };
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
@@ -343,8 +381,11 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
   t.classList.add('active');
-  document.getElementById('panel-' + t.dataset.tab).classList.add('active');
-  if (t.dataset.tab === 'mapas' && !S.mapLoaded) loadMap();
+  document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+  if (t.dataset.tab==='mapas') {
+    if (!S.mapLoaded) loadMap();
+    else setTimeout(fitSVG, 50); // auto-center on tab switch
+  }
 }));
 
 document.querySelectorAll('.mtt').forEach(t => t.addEventListener('click', () => {
@@ -357,46 +398,269 @@ document.querySelectorAll('.mtt').forEach(t => t.addEventListener('click', () =>
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
   const [r1, r21, cents] = await Promise.all([
-    fetch('data/r1_districts.json').then(r => r.json()),
-    fetch('data/r2021_districts.json').then(r => r.json()),
-    fetch('data/centroids.json').then(r => r.json()),
+    fetch('data/r1_districts.json').then(r=>r.json()),
+    fetch('data/r2021_districts.json').then(r=>r.json()),
+    fetch('data/centroids.json').then(r=>r.json()),
   ]);
-  S.r1    = new Map(r1.filter(d => d.u && d.u !== 'nan').map(d => [d.u, d]));
-  S.r2021 = new Map(r21.filter(d => d.u && d.u !== 'nan').map(d => [d.u, d]));
+  S.r1    = new Map(r1.filter(d=>d.u&&d.u!=='nan').map(d=>[d.u,d]));
+  S.r2021 = new Map(r21.filter(d=>d.u&&d.u!=='nan').map(d=>[d.u,d]));
   S.cents = cents;
-  await loadLive();
+  await Promise.all([loadLive(), loadForecast(), loadFlows()]);
   loadMap();
-  setInterval(loadLive, 60000);
+  setInterval(async ()=>{ await Promise.all([loadLive(),loadForecast(),loadFlows()]); }, 90000);
 }
 
 async function loadLive() {
   try {
-    const data = await fetch(`data/live.json?t=${Date.now()}`).then(r => r.json());
+    const data = await fetch(`data/live.json?t=${Date.now()}`).then(r=>r.json());
     S.live = data;
-    S.lByU = new Map((data.districts || []).filter(d => d.u && d.u !== 'nan').map(d => [d.u, d]));
-    updateUI();
-    // Always re-render map on live data update
+    S.lByU = new Map((data.districts||[]).filter(d=>d.u&&d.u!=='nan').map(d=>[d.u,d]));
+    updateBar(); updateDepts();
     if (S.mapLoaded) renderMap();
   } catch(e) {}
 }
 
+async function loadForecast() {
+  try {
+    const fc = await fetch(`data/forecast.json?t=${Date.now()}`).then(r=>r.json());
+    S.forecast = fc;
+    renderNeedle();
+  } catch(e) {
+    // forecast.json doesn't exist yet
+    renderNeedleEmpty();
+  }
+}
+
+async function loadFlows() {
+  try {
+    const fl = await fetch(`data/flows.json?t=${Date.now()}`).then(r=>r.json());
+    S.flows = fl;
+    renderFlujo();
+  } catch(e) {}
+}
+
+// ── NYT-STYLE NEEDLE ──────────────────────────────────────────────────────────
+// The needle shows a semicircular arc where the x-axis is the final margin
+// Left = Keiko wins, Right = Sanchez wins, center = tie
+// Distribution shown as a histogram above the arc
+// 95% CI shaded, 80% CI darker shade, needle = median projection
+
+const SVG_W = 600, SVG_H = 260;
+const CX = 300, CY = 240, R = 210;  // arc center and radius
+const MARGIN_SCALE = 400000;  // total votes range for the arc (±400k)
+
+function marginToAngle(margin) {
+  // margin: negative = Sanchez, positive = Keiko
+  // angle: -90° (left/Keiko) to +90° (right/Sanchez)
+  // We map: margin=-SCALE → angle=-90°, margin=+SCALE → angle=+90°
+  // Note: in SVG angle convention for our arc, Keiko is LEFT (negative angle from top)
+  const frac = Math.max(-1, Math.min(1, margin / MARGIN_SCALE));
+  return frac * Math.PI / 2;  // radians, 0=top, negative=left, positive=right
+}
+
+function angleToSVG(angle) {
+  // angle 0 = pointing up (12 o'clock)
+  // We want the arc to go from left (Keiko) to right (Sanchez)
+  // In SVG: y increases downward, origin top-left
+  const x = CX + R * Math.sin(angle);
+  const y = CY - R * Math.cos(angle);
+  return [x, y];
+}
+
+function renderNeedleEmpty() {
+  drawArcAndLabels(null);
+  set('fc-kp','—'); set('fc-sp','—');
+  set('fc-st','Ejecuta forecast_model.py');
+  set('margin-callout','Sin pronóstico aún');
+}
+
+function renderNeedle() {
+  const fc = S.forecast;
+  if (!fc) { renderNeedleEmpty(); return; }
+  const r = fc.results, m = fc.meta;
+
+  // Update text panels
+  set('fc-kp', Math.round(r.win_prob_keiko*100)+'%');
+  set('fc-sp', Math.round(r.win_prob_sanchez*100)+'%');
+  set('fc-st', {
+    'alta':'Alta confianza',
+    'moderada':'Confianza moderada',
+    'baja':'Estimación preliminar'
+  }[m.status] || 'Modelo actualizado');
+  set('fc-mc', `${fmt(m.counted_mesas||0)} / ${fmt(TM)} mesas · ${(m.pct_reported||0).toFixed(1)}% escrutado`);
+
+  // Win prob bar
+  const kP = Math.round(r.win_prob_keiko*100);
+  id('pb-k').style.width = kP+'%'; id('pb-s').style.width = (100-kP)+'%';
+  set('pb-lk', kP>=13?kP+'%':''); set('pb-ls', (100-kP)>=13?(100-kP)+'%':'');
+
+  // Stats
+  const curr = r.current_margin;
+  const proj = r.proj_margin;
+  set('fc-curr', (curr>=0?'+':'')+fmt(curr)+' votos');
+  set('fc-proj', (proj>=0?'+':'')+fmt(proj)+' votos');
+  set('fc-sigma', '±'+fmt(r.sigma)+' votos');
+  set('fc-rm', fmt(TM-(m.counted_mesas||0)));
+
+  // Margin callout
+  const winner = proj >= 0 ? 'Keiko' : 'Sánchez';
+  const wCol   = proj >= 0 ? CK : CS;
+  id('margin-callout').innerHTML =
+    `Pronóstico: <span style="color:${wCol};font-weight:700">${winner} +${fmt(Math.abs(proj))} votos</span>`;
+  id('margin-ci').textContent =
+    `IC 95%: [${(proj>=0?'+':'')}${fmt(r.ci_95_lo)}, ${proj>=0?'+':''}${fmt(r.ci_95_hi)}]  ·  ` +
+    `IC 80%: [${fmt(r.ci_80_lo)}, ${fmt(r.ci_80_hi)}]`;
+
+  set('fc-nt', `Modelo jerárquico bayesiano · ${fmt(m.n_sims||10000)} simulaciones MC · R² nac. ${((m.model_r2||0)*100).toFixed(1)}% · σ tabla: ${((m.sigma_nat||0)*100).toFixed(2)}pp`);
+
+  drawArcAndLabels(fc);
+}
+
+function drawArcAndLabels(fc) {
+  const svg = id('needle-svg');
+
+  // Draw arc background
+  const arcSteps = 200;
+  let arcPath = '';
+  for (let i=0; i<=arcSteps; i++) {
+    const angle = -Math.PI/2 + (i/arcSteps)*Math.PI;
+    const [x,y] = angleToSVG(angle);
+    arcPath += (i===0?`M${x.toFixed(1)},${y.toFixed(1)}`:`L${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  id('arc-bg').setAttribute('d', arcPath);
+
+  // Draw distribution histogram if available
+  const histG = id('dist-hist');
+  histG.innerHTML = '';
+  if (fc?.distribution) {
+    const d = fc.distribution;
+    const maxCount = Math.max(...d.counts);
+    const HIST_H = 80;  // max histogram bar height in SVG units
+    d.bins.forEach((margin, i) => {
+      const count = d.counts[i];
+      if (count === 0) return;
+      const angle = marginToAngle(-margin);  // note: negative because Keiko=positive margin=left
+      const [ax, ay] = angleToSVG(angle);
+      const barH = (count/maxCount)*HIST_H;
+      const inner = Math.max(R - barH, 80);
+      const [ix, iy] = [CX + inner*Math.sin(angle), CY - inner*Math.cos(angle)];
+      // Color: inside 95% CI
+      const inCI = margin >= (fc.results.ci_95_lo||0) && margin <= (fc.results.ci_95_hi||1);
+      const inCI80 = margin >= (fc.results.ci_80_lo||0) && margin <= (fc.results.ci_80_hi||1);
+      const col = margin >= 0 ? CK : CS;
+      const opacity = inCI80 ? 0.5 : inCI ? 0.25 : 0.08;
+      const el = document.createElementNS('http://www.w3.org/2000/svg','line');
+      el.setAttribute('x1', ax.toFixed(1)); el.setAttribute('y1', ay.toFixed(1));
+      el.setAttribute('x2', ix.toFixed(1)); el.setAttribute('y2', iy.toFixed(1));
+      el.setAttribute('stroke', col);
+      el.setAttribute('stroke-width', '3');
+      el.setAttribute('stroke-opacity', opacity);
+      histG.appendChild(el);
+    });
+  }
+
+  // CI bands on arc
+  const ciG = id('ci-bands');
+  ciG.innerHTML = '';
+  if (fc?.results) {
+    const r = fc.results;
+    // 95% CI arc band
+    const ci95path = arcBand(r.ci_95_lo, r.ci_95_hi, R-2, R+2);
+    const ci95el = document.createElementNS('http://www.w3.org/2000/svg','path');
+    ci95el.setAttribute('d', ci95path);
+    ci95el.setAttribute('fill', '#888'); ci95el.setAttribute('opacity','0.15');
+    ciG.appendChild(ci95el);
+    // 80% CI arc band
+    const ci80path = arcBand(r.ci_80_lo, r.ci_80_hi, R-3, R+3);
+    const ci80el = document.createElementNS('http://www.w3.org/2000/svg','path');
+    ci80el.setAttribute('d', ci80path);
+    ci80el.setAttribute('fill', '#888'); ci80el.setAttribute('opacity','0.25');
+    ciG.appendChild(ci80el);
+  }
+
+  // Margin tick labels on arc
+  const arcLblG = id('arc-labels');
+  arcLblG.innerHTML = '';
+  const tickMargins = [-300000,-200000,-100000,0,100000,200000,300000];
+  tickMargins.forEach(m => {
+    const angle = marginToAngle(-m);
+    if (Math.abs(angle) > Math.PI/2 * 0.98) return;
+    const [ax,ay] = angleToSVG(angle);
+    const labelR = R + 16;
+    const lx = CX + labelR*Math.sin(angle);
+    const ly = CY - labelR*Math.cos(angle);
+    const el = document.createElementNS('http://www.w3.org/2000/svg','text');
+    el.setAttribute('x', lx.toFixed(1)); el.setAttribute('y', ly.toFixed(1));
+    el.setAttribute('text-anchor','middle'); el.setAttribute('font-family','system-ui');
+    el.setAttribute('font-size','8'); el.setAttribute('fill','#9b9b97');
+    el.textContent = m===0?'0':(m>0?'K+':'S+')+(Math.abs(m)/1000)+'k';
+    arcLblG.appendChild(el);
+
+    // Tick mark
+    const t1 = document.createElementNS('http://www.w3.org/2000/svg','line');
+    const [o1x,o1y] = [CX+(R-4)*Math.sin(angle), CY-(R-4)*Math.cos(angle)];
+    const [o2x,o2y] = [CX+(R+4)*Math.sin(angle), CY-(R+4)*Math.cos(angle)];
+    t1.setAttribute('x1',o1x.toFixed(1)); t1.setAttribute('y1',o1y.toFixed(1));
+    t1.setAttribute('x2',o2x.toFixed(1)); t1.setAttribute('y2',o2y.toFixed(1));
+    t1.setAttribute('stroke','#ccc'); t1.setAttribute('stroke-width','1');
+    arcLblG.appendChild(t1);
+  });
+
+  // Needle (points to projected margin)
+  if (fc?.results) {
+    const proj = fc.results.proj_margin || 0;
+    const angle = marginToAngle(-proj);
+    const [nx,ny] = angleToSVG(angle);
+    const needleLine = id('needle-line');
+    needleLine.setAttribute('x1', CX.toString());
+    needleLine.setAttribute('y1', CY.toString());
+    needleLine.setAttribute('x2', nx.toFixed(1));
+    needleLine.setAttribute('y2', ny.toFixed(1));
+    needleLine.setAttribute('stroke', proj>=0 ? CK : CS);
+    needleLine.setAttribute('stroke-width','2.5');
+  }
+}
+
+function arcBand(marginLo, marginHi, rInner, rOuter) {
+  // Draw an arc band between two margins
+  if (marginLo == null || marginHi == null) return '';
+  const aLo = marginToAngle(-marginHi);  // note flipped
+  const aHi = marginToAngle(-marginLo);
+  if (Math.abs(aLo - aHi) < 0.001) return '';
+  const steps = 40;
+  let d = '';
+  // Outer arc from aLo to aHi
+  for (let i=0; i<=steps; i++) {
+    const a = aLo + (aHi-aLo)*(i/steps);
+    const x = CX + rOuter*Math.sin(a);
+    const y = CY - rOuter*Math.cos(a);
+    d += (i===0?`M${x.toFixed(1)},${y.toFixed(1)}`:`L${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  // Inner arc from aHi back to aLo
+  for (let i=steps; i>=0; i--) {
+    const a = aLo + (aHi-aLo)*(i/steps);
+    const x = CX + rInner*Math.sin(a);
+    const y = CY - rInner*Math.cos(a);
+    d += `L${x.toFixed(1)},${y.toFixed(1)}`;
+  }
+  return d + 'Z';
+}
+
+// ── MAP ───────────────────────────────────────────────────────────────────────
 async function loadMap() {
   try {
     const resp = await fetch('data/peru_districts.svg');
     if (!resp.ok) { mapFallback(); return; }
     const txt = await resp.text();
     const wrap = id('mw');
-    const loading = id('mload');
-    if (loading) loading.remove();
+    id('mload')?.remove();
     wrap.insertAdjacentHTML('afterbegin', txt);
     const svg = wrap.querySelector('svg#map-svg');
+    svg.querySelectorAll('title').forEach(el=>el.remove());
     const vb = svg.getAttribute('viewBox').split(' ');
-    S.svgW = parseFloat(vb[2]);
-    S.svgH = parseFloat(vb[3]);
-    // Remove all SVG <title> elements to suppress browser default tooltips
-    svg.querySelectorAll('title').forEach(el => el.remove());
+    S.svgW=parseFloat(vb[2]); S.svgH=parseFloat(vb[3]);
     fitSVG();
-    S.mapLoaded = true;
+    S.mapLoaded=true;
     setupZoom();
     bindTooltip();
     renderMap();
@@ -404,460 +668,195 @@ async function loadMap() {
 }
 
 function mapFallback() {
-  const el = id('mload');
-  if (el) el.innerHTML = '<strong>Mapa no disponible</strong>Ejecuta generate_map_svg.py';
+  const el=id('mload');
+  if(el) el.innerHTML='<strong>Mapa no disponible</strong>Ejecuta generate_map_svg.py';
 }
 
 function fitSVG() {
-  const wrap = id('mw'), svg = wrap.querySelector('svg#map-svg');
-  if (!svg) return;
-  const wH = wrap.clientHeight || 500, wW = wrap.clientWidth || 600;
-  const scale = Math.min(wW / S.svgW, wH / S.svgH);
-  svg.style.width  = (S.svgW * scale) + 'px';
-  svg.style.height = (S.svgH * scale) + 'px';
-  S.panX = (wW - S.svgW * scale) / 2;
-  S.panY = (wH - S.svgH * scale) / 2;
-  S.zoom = scale;
+  const wrap=id('mw'), svg=wrap?.querySelector('svg#map-svg');
+  if(!svg) return;
+  const wH=wrap.clientHeight||500, wW=wrap.clientWidth||600;
+  const scale=Math.min(wW/S.svgW, wH/S.svgH);
+  svg.style.width=(S.svgW*scale)+'px'; svg.style.height=(S.svgH*scale)+'px';
+  S.panX=(wW-S.svgW*scale)/2; S.panY=(wH-S.svgH*scale)/2; S.zoom=scale;
   applyT();
 }
 
-// ── ZOOM & PAN ────────────────────────────────────────────────────────────────
 function applyT() {
-  const svg = document.querySelector('#mw svg#map-svg');
-  if (svg) svg.style.transform = `translate(${S.panX}px,${S.panY}px) scale(${S.zoom})`;
+  const svg=document.querySelector('#mw svg#map-svg');
+  if(svg) svg.style.transform=`translate(${S.panX}px,${S.panY}px) scale(${S.zoom})`;
 }
 
 function setupZoom() {
-  const wrap = id('mw');
-  wrap.addEventListener('wheel', e => {
+  const wrap=id('mw');
+  wrap.addEventListener('wheel',e=>{
     e.preventDefault();
-    const r = wrap.getBoundingClientRect(), mx = e.clientX-r.left, my = e.clientY-r.top;
-    const delta = e.deltaY > 0 ? 0.83 : 1.20;
-    const nz = Math.min(15, Math.max(0.3, S.zoom * delta));
-    S.panX = mx - (mx - S.panX) * (nz / S.zoom);
-    S.panY = my - (my - S.panY) * (nz / S.zoom);
-    S.zoom = nz; applyT();
-  }, { passive: false });
-  let drag=false, sx=0, sy=0, spx=0, spy=0;
-  wrap.addEventListener('mousedown', e => { drag=true; sx=e.clientX; sy=e.clientY; spx=S.panX; spy=S.panY; });
-  window.addEventListener('mousemove', e => { if(!drag) return; S.panX=spx+(e.clientX-sx); S.panY=spy+(e.clientY-sy); applyT(); });
-  window.addEventListener('mouseup', () => drag=false);
-  id('zi').onclick = () => { S.zoom=Math.min(15,S.zoom*1.4); applyT(); };
-  id('zo').onclick = () => { S.zoom=Math.max(0.3,S.zoom/1.4); applyT(); };
-  id('zr').onclick = fitSVG;
+    const r=wrap.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+    const delta=e.deltaY>0?0.83:1.20;
+    const nz=Math.min(15,Math.max(0.3,S.zoom*delta));
+    S.panX=mx-(mx-S.panX)*(nz/S.zoom); S.panY=my-(my-S.panY)*(nz/S.zoom); S.zoom=nz; applyT();
+  },{passive:false});
+  let drag=false,sx=0,sy=0,spx=0,spy=0;
+  wrap.addEventListener('mousedown',e=>{drag=true;sx=e.clientX;sy=e.clientY;spx=S.panX;spy=S.panY;});
+  window.addEventListener('mousemove',e=>{if(!drag)return;S.panX=spx+(e.clientX-sx);S.panY=spy+(e.clientY-sy);applyT();});
+  window.addEventListener('mouseup',()=>drag=false);
+  id('zi').onclick=()=>{S.zoom=Math.min(15,S.zoom*1.4);applyT();};
+  id('zo').onclick=()=>{S.zoom=Math.max(0.3,S.zoom/1.4);applyT();};
+  id('zr').onclick=fitSVG;
 }
 
 // ── RESULTS BAR ───────────────────────────────────────────────────────────────
 function updateBar() {
   const m=S.live?.meta||{}, has=(m.counted_mesas||0)>0;
-  if (!has) return;
-  const kV=m.k_votes||0, sV=m.s_votes||0, vl=m.valid_votes||(kV+sV)||1;
-  const kP=kV/vl*100, kBW=kV/(kV+sV+.001)*100;
+  if(!has) return;
+  const kV=m.k_votes||0,sV=m.s_votes||0,vl=m.valid_votes||(kV+sV)||1;
+  const kP=kV/vl*100,kBW=kV/(kV+sV+.001)*100;
   set('rb-kp',kP.toFixed(1)+'%'); set('rb-kv',fmt(kV)+' votos');
   set('rb-sp',(100-kP).toFixed(1)+'%'); set('rb-sv',fmt(sV)+' votos');
   id('rb-bk').style.width=kBW+'%'; id('rb-bs').style.width=(100-kBW)+'%';
   set('rb-pr',(m.pct_reported||0).toFixed(1));
-  if (m.timestamp) set('rb-ts',m.timestamp);
+  if(m.timestamp) set('rb-ts',m.timestamp);
   id('dot').classList.add('on'); set('ll','En vivo');
 }
 
-// ── FORECAST ─────────────────────────────────────────────────────────────────
-function forecast() {
-  const m=S.live?.meta||{}, cnt=m.counted_mesas||0;
-  if (!cnt||!S.r1) return {kP:50,sP:50,status:'sin_datos'};
-  const kV=m.k_votes||0, sV=m.s_votes||0, vl=m.valid_votes||(kV+sV)||1;
-  const kSh=kV/vl, pRep=cnt/TM, margin=kV-sV;
-
-  // Uncertainty model: extra variance from unreported mesas
-  // At low reporting %, sigma should be large relative to current margin
-  let aK=0, aS=0, variance=0;
-  for (const [u,r] of S.r1) {
-    const ld=S.lByU?.get(u), pd=r.tm-(ld?.cm||0);
-    if (pd<=0||r.tv===0) continue;
-    const avg=r.tv/r.tm, pVV=pd*avg;
-    const denom=r.k+r.s;
-    const ke = ld&&(ld.k+ld.s)>0 ? ld.k/(ld.k+ld.s) : (denom>0?r.k/denom:kSh);
-    aK+=ke*pVV; aS+=(1-ke)*pVV;
-    // Variance: proportional to pending mesas AND local uncertainty
-    // At high reporting, variance is small. At low reporting, large.
-    const localUncert = ld ? 0.10 : 0.18; // more uncertain if no local data
-    variance += Math.pow(Math.sqrt(pd) * avg * localUncert, 2);
-  }
-
-  // Additional uncertainty: how much the pending areas might differ from reported
-  // This is the key: even if current margin is large, if few mesas are in,
-  // unreported areas could be different
-  const reportingBonus = Math.max(0, 1 - pRep) * 0.5; // 0→0.5 extra vol at 0% reporting
-  const sigma = Math.sqrt(variance) * (1 + reportingBonus) || 1;
-
-  const projMargin = margin + (aK - aS);
-  const z = projMargin / sigma;
-  const kP = clamp(Math.round(normalCDF(z) * 100), 1, 99);
-  return {kP, sP:100-kP, status:pRep>.5?'alta':pRep>.1?'moderada':'baja',
-    margin, marginPct:margin/vl*100, sigma, projMargin};
-}
-
-function updateForecast() {
-  const fc=forecast(), m=S.live?.meta||{}, has=(m.counted_mesas||0)>0;
-  set('fc-kp',fc.kP+'%'); set('fc-sp',fc.sP+'%');
-  set('fc-mc',`${fmt(m.counted_mesas||0)} / ${fmt(TM)} mesas`);
-  set('fc-st',{sin_datos:'Esperando resultados…',baja:'Estimación preliminar',moderada:'Estimación parcial',alta:'Alta confianza'}[fc.status]||'');
-  id('ng').setAttribute('transform',`rotate(${-90+(fc.kP/100)*180-90},250,195)`);
-  set('nkp',fc.kP+'%'); set('nsp',fc.sP+'%');
-  set('nmg', has?(fc.margin>=0?'Keiko':'Sánchez')+' +'+fmt(Math.abs(fc.margin))+' votos ('+Math.abs(fc.marginPct).toFixed(2)+'%)':'Esperando resultados…');
-  id('pb-k').style.width=fc.kP+'%'; id('pb-s').style.width=fc.sP+'%';
-  set('pb-lk',fc.kP>=13?fc.kP+'%':''); set('pb-ls',fc.sP>=13?fc.sP+'%':'');
-  set('fc-mv',has?(fc.margin>=0?'+':'')+fmt(fc.margin):'—');
-  set('fc-mp',has?(fc.marginPct>=0?'+':'')+fc.marginPct.toFixed(2)+'%':'—%');
-  set('fc-rm',fmt(TM-(m.counted_mesas||0)));
-  const conf={baja:'baja confianza',moderada:'confianza moderada',alta:'alta confianza'}[fc.status];
-  id('fc-nt').innerHTML=has?`Modelo bayesiano · σ≈±${fmt(Math.round(fc.sigma||0))} votos · <b>${conf}</b>`:'Sin datos ONPE aún. El pronóstico se actualizará automáticamente.';
-}
-
-// ── MAP RENDER ────────────────────────────────────────────────────────────────
+// ── MAP COLORING ──────────────────────────────────────────────────────────────
 function renderMap() {
-  if (!S.mapLoaded||!S.r1) return;
-  const type=S.activeMap;
-  const isBubble=(type==='margin'||type==='pending');
-
-  // Color district fills
-  document.querySelectorAll('#map-svg #districts path[data-u]').forEach(path => {
+  if(!S.mapLoaded||!S.r1) return;
+  const type=S.activeMap, isBubble=(type==='margin'||type==='pending');
+  document.querySelectorAll('#map-svg #districts path[data-u]').forEach(path=>{
     const u=path.getAttribute('data-u');
-    const r=S.r1.get(u), r21=S.r2021?.get(u), ld=S.lByU?.get(u);
-    // Bubble maps: background = live runoff results (same as runoff tab)
-    path.style.fill = isBubble ? runoffColor(ld) : distColor(type,r,r21,ld);
+    const r=S.r1.get(u),r21=S.r2021?.get(u),ld=S.lByU?.get(u);
+    path.style.fill=isBubble?runoffColor(ld):distColor(type,r,r21,ld);
   });
-
-  // Clear & redraw bubbles
   const bG=document.getElementById('bubbles');
-  if (bG) {
-    bG.innerHTML='';
-    if (type==='margin')  drawMarginBubbles(bG);
-    if (type==='pending') drawPendingBubbles(bG);
-  }
-
-  renderLegend(type);
-  renderTopDists(type);
+  if(bG){bG.innerHTML='';if(type==='margin')drawMarginBubbles(bG);if(type==='pending')drawPendingBubbles(bG);}
+  renderLegend(type); renderTopDists(type);
 }
 
-// Background color for bubble maps = live runoff result
-function runoffColor(ld) {
-  if (!ld||(ld.k+ld.s)===0) return CN;
-  return divColor(ld.k/(ld.k+ld.s));
-}
-
-function distColor(type,r,r21,ld) {
-  if (type==='runoff') return runoffColor(ld);
-  if (type==='r1') {
-    if (!r||r.tv===0) return CN;
-    const d=r.k+r.s; return d>0?divColor(r.k/d):CN;
-  }
-  if (type==='growth-k') {
-    if (!ld||!r21||r21.tv21===0||(ld.k+ld.s)===0) return CN;
-    const diff=ld.k/(ld.k+ld.s)-r21.k21/r21.tv21;
-    return ouColor(diff);
-  }
-  if (type==='growth-s') {
-    if (!ld||!r21||r21.tv21===0||(ld.k+ld.s)===0) return CN;
-    const diff=ld.s/(ld.k+ld.s)-r21.c21/r21.tv21;
-    return ouColor(diff);
-  }
+function runoffColor(ld){if(!ld||(ld.k+ld.s)===0)return CN;return divColor(ld.k/(ld.k+ld.s));}
+function distColor(type,r,r21,ld){
+  if(type==='runoff') return runoffColor(ld);
+  if(type==='r1'){if(!r||r.tv===0)return CN;const d=r.k+r.s;return d>0?divColor(r.k/d):CN;}
+  if(type==='growth-k'){if(!ld||!r21||r21.tv21===0||(ld.k+ld.s)===0)return CN;return ouColor(ld.k/(ld.k+ld.s)-r21.k21/r21.tv21);}
+  if(type==='growth-s'){if(!ld||!r21||r21.tv21===0||(ld.k+ld.s)===0)return CN;return ouColor(ld.s/(ld.k+ld.s)-r21.c21/r21.tv21);}
   return CN;
 }
-
-// t=1→CK (orange), t=0→CS (green), t=0.5→white
-function divColor(t,intensity=1) {
-  const a=hRGB(CK), b=hRGB(CS), w=[255,255,255];
-  const src=t>=0.5?a:b;
-  const str=Math.min(Math.abs(t-0.5)*2,1)*clamp(intensity,0,1);
-  return `rgb(${Math.round(w[0]+(src[0]-w[0])*str)},${Math.round(w[1]+(src[1]-w[1])*str)},${Math.round(w[2]+(src[2]-w[2])*str)})`;
-}
-
-// Over/under: positive diff = green (COVER), negative = red (CUNDER)
-function ouColor(diff) {
-  const str=clamp(Math.abs(diff)/0.25,0,1);
-  const src=diff>0?hRGB(COVER):hRGB(CUNDER);
-  const w=[245,242,236];
-  return `rgb(${Math.round(w[0]+(src[0]-w[0])*str)},${Math.round(w[1]+(src[1]-w[1])*str)},${Math.round(w[2]+(src[2]-w[2])*str)})`;
-}
-
+function divColor(t,intensity=1){const a=hRGB(CK),b=hRGB(CS),w=[255,255,255];const src=t>=0.5?a:b;const str=Math.min(Math.abs(t-0.5)*2,1)*Math.max(0,Math.min(1,intensity));return `rgb(${Math.round(w[0]+(src[0]-w[0])*str)},${Math.round(w[1]+(src[1]-w[1])*str)},${Math.round(w[2]+(src[2]-w[2])*str)})`;}
+function ouColor(diff){const str=Math.max(0,Math.min(1,Math.abs(diff)/0.25));const src=diff>0?hRGB(COVER):hRGB(CUNDER);const w=[245,242,236];return `rgb(${Math.round(w[0]+(src[0]-w[0])*str)},${Math.round(w[1]+(src[1]-w[1])*str)},${Math.round(w[2]+(src[2]-w[2])*str)})`;}
 function hRGB(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
 
-// ── BUBBLES ───────────────────────────────────────────────────────────────────
-function drawMarginBubbles(g) {
-  if (!S.lByU||S.lByU.size===0) return;
-  let mx=0;
-  for (const ld of S.lByU.values()) mx=Math.max(mx,Math.abs(ld.k-ld.s));
-  if (!mx) return;
-  const MAX_R=18;
-  const bubbles=[];
-  for (const [u,ld] of S.lByU) {
-    const margin=Math.abs(ld.k-ld.s); if(!margin) continue;
-    const c=S.cents?.[u]; if(!c) continue;
-    const r=Math.sqrt(margin/mx)*MAX_R; if(r<0.5) continue;
-    const col=ld.k>ld.s?CK:CS;
-    bubbles.push({c,r,col,u});
-  }
-  bubbles.sort((a,b)=>a.r-b.r);
-  g.innerHTML=bubbles.map(b=>`<circle cx="${b.c[0]}" cy="${b.c[1]}" r="${b.r.toFixed(1)}" fill="${b.col}" fill-opacity="0.75" stroke="white" stroke-width="0.35" data-u="${b.u}" style="cursor:pointer"/>`).join('');
+function drawMarginBubbles(g){
+  if(!S.lByU||!S.lByU.size)return;
+  let mx=0; for(const ld of S.lByU.values())mx=Math.max(mx,Math.abs(ld.k-ld.s));
+  if(!mx)return;
+  const bs=[];
+  for(const[u,ld]of S.lByU){const margin=Math.abs(ld.k-ld.s);if(!margin)continue;const c=S.cents?.[u];if(!c)continue;const r=Math.sqrt(margin/mx)*18;if(r<0.5)continue;bs.push({c,r,col:ld.k>ld.s?CK:CS,u});}
+  bs.sort((a,b)=>a.r-b.r);
+  g.innerHTML=bs.map(b=>`<circle cx="${b.c[0]}" cy="${b.c[1]}" r="${b.r.toFixed(1)}" fill="${b.col}" fill-opacity="0.75" stroke="white" stroke-width="0.35" data-u="${b.u}" style="cursor:pointer"/>`).join('');
 }
-
-function drawPendingBubbles(g) {
-  if (!S.r1) return;
-  let mx=0;
-  for (const r of S.r1.values()) {
-    const cm=S.lByU?.get(r.u)?.cm||0;
-    mx=Math.max(mx,r.tm-cm);
-  }
-  if (!mx) return;
-  const MAX_R=16;
-  const bubbles=[];
-  for (const [u,r] of S.r1) {
-    const cm=S.lByU?.get(u)?.cm||0, pend=r.tm-cm;
-    if (pend<=0) continue;
-    const c=S.cents?.[u]; if(!c) continue;
-    const rv=Math.sqrt(pend/mx)*MAX_R; if(rv<0.5) continue;
-    // Grey bubbles for pending mesas
-    bubbles.push({c,r:rv,u,pend});
-  }
-  bubbles.sort((a,b)=>a.r-b.r);
-  g.innerHTML=bubbles.map(b=>`<circle cx="${b.c[0]}" cy="${b.c[1]}" r="${b.r.toFixed(1)}" fill="#888" fill-opacity="0.60" stroke="white" stroke-width="0.35" data-u="${b.u}" style="cursor:pointer"/>`).join('');
+function drawPendingBubbles(g){
+  if(!S.r1)return;
+  let mx=0;for(const r of S.r1.values()){const cm=S.lByU?.get(r.u)?.cm||0;mx=Math.max(mx,r.tm-cm);}
+  if(!mx)return;
+  const bs=[];
+  for(const[u,r]of S.r1){const cm=S.lByU?.get(u)?.cm||0,pend=r.tm-cm;if(pend<=0)continue;const c=S.cents?.[u];if(!c)continue;const rv=Math.sqrt(pend/mx)*16;if(rv<0.5)continue;bs.push({c,r:rv,u});}
+  bs.sort((a,b)=>a.r-b.r);
+  g.innerHTML=bs.map(b=>`<circle cx="${b.c[0]}" cy="${b.c[1]}" r="${b.r.toFixed(1)}" fill="#888" fill-opacity="0.60" stroke="white" stroke-width="0.35" data-u="${b.u}" style="cursor:pointer"/>`).join('');
 }
 
 // ── TOOLTIP ───────────────────────────────────────────────────────────────────
-function bindTooltip() {
-  const tt=id('tt'), wrap=id('mw');
-  wrap.addEventListener('mousemove', e => {
-    const el=e.target.closest('[data-u]');
-    if (!el) { tt.style.display='none'; return; }
+function bindTooltip(){
+  const tt=id('tt'),wrap=id('mw');
+  wrap.addEventListener('mousemove',e=>{
+    const el=e.target.closest('[data-u]');if(!el){tt.style.display='none';return;}
     const u=el.getAttribute('data-u');
-    const r=S.r1?.get(u), r21=S.r2021?.get(u), ld=S.lByU?.get(u);
-    if (!r) { tt.style.display='none'; return; }
-
-    const type=S.activeMap;
+    const r=S.r1?.get(u),r21=S.r2021?.get(u),ld=S.lByU?.get(u);
+    if(!r){tt.style.display='none';return;}
     let html=`<b style="font-size:11px">${r.d}, ${r.p}</b><br>`;
-
-    // Always show live R2 results if available
-    if (ld&&(ld.k+ld.s)>0) {
-      const tv=ld.k+ld.s, win=ld.k>ld.s;
+    if(ld&&(ld.k+ld.s)>0){
+      const tv=ld.k+ld.s,win=ld.k>ld.s;
       html+=`<span style="color:${CK}">Keiko: ${(ld.k/tv*100).toFixed(1)}%</span><br>`;
       html+=`<span style="color:${CS}">Sánchez: ${(ld.s/tv*100).toFixed(1)}%</span><br>`;
       html+=`<b style="color:${win?CK:CS}">Margen: ${win?'Keiko':'Sánchez'} +${fmt(Math.abs(ld.k-ld.s))} votos</b><br>`;
-    } else {
-      html+=`<span style="color:var(--faint)">Sin datos 2ª vuelta</span><br>`;
-    }
-
-    // 1ra vuelta 2026
-    if (r.tv>0) {
-      const kPct=(r.k/r.tv*100).toFixed(1), sPct=(r.s/r.tv*100).toFixed(1);
-      html+=`<span style="color:var(--faint);font-size:9px">1ra vuelta 2026: K ${kPct}% · S ${sPct}%</span><br>`;
-    }
-
-    // 2021 runoff
-    if (r21&&r21.tv21>0) {
-      const k21=(r21.k21/r21.tv21*100).toFixed(1), c21=(r21.c21/r21.tv21*100).toFixed(1);
-      html+=`<span style="color:var(--faint);font-size:9px">2da vuelta 2021: Castillo ${c21}% · Keiko ${k21}%</span>`;
-    }
-
-    // Extra context depending on map type
-    if (type==='pending') {
-      const cm=ld?.cm||0, pend=r.tm-cm;
-      html+=`<br><span style="color:var(--faint);font-size:9px">Pendientes: ${fmt(pend)} actas</span>`;
-    }
-    if (type==='growth-k'&&ld&&r21&&r21.tv21>0&&(ld.k+ld.s)>0) {
-      const diff=((ld.k/(ld.k+ld.s)-r21.k21/r21.tv21)*100);
-      const col=diff>0?COVER:CUNDER;
-      html+=`<br><span style="color:${col};font-size:9px;font-weight:600">Keiko vs. 2021: ${diff>=0?'+':''}${diff.toFixed(1)}pp</span>`;
-    }
-    if (type==='growth-s'&&ld&&r21&&r21.tv21>0&&(ld.k+ld.s)>0) {
-      const diff=((ld.s/(ld.k+ld.s)-r21.c21/r21.tv21)*100);
-      const col=diff>0?COVER:CUNDER;
-      html+=`<br><span style="color:${col};font-size:9px;font-weight:600">Sánchez vs. Castillo: ${diff>=0?'+':''}${diff.toFixed(1)}pp</span>`;
-    }
-
-    tt.style.display='block';
-    tt.style.left=(e.clientX+14)+'px';
-    tt.style.top=(e.clientY-10)+'px';
-    tt.innerHTML=html;
+    } else {html+=`<span style="color:var(--faint)">Sin datos 2ª vuelta</span><br>`;}
+    if(r.tv>0){const d=r.k+r.s;const kS=d>0?r.k/d*100:0;html+=`<span style="font-size:9px;color:var(--faint)">1ra vuelta 2026: K ${kS.toFixed(1)}% · S ${(100-kS).toFixed(1)}%</span><br>`;}
+    if(r21&&r21.tv21>0){const k21=r21.k21/r21.tv21*100,c21=r21.c21/r21.tv21*100;html+=`<span style="font-size:9px;color:var(--faint)">2da vuelta 2021: Castillo ${c21.toFixed(1)}% · Keiko ${k21.toFixed(1)}%</span>`;}
+    const type=S.activeMap;
+    if(type==='pending'){const pend=r.tm-(ld?.cm||0);html+=`<br><span style="font-size:9px;color:var(--faint)">Pendientes: ${fmt(pend)} actas</span>`;}
+    if(type==='growth-k'&&ld&&r21&&r21.tv21>0&&(ld.k+ld.s)>0){const diff=(ld.k/(ld.k+ld.s)-r21.k21/r21.tv21)*100;html+=`<br><span style="font-size:9px;color:${diff>0?COVER:CUNDER};font-weight:600">Keiko vs. 2021: ${diff>=0?'+':''}${diff.toFixed(1)}pp</span>`;}
+    if(type==='growth-s'&&ld&&r21&&r21.tv21>0&&(ld.k+ld.s)>0){const diff=(ld.s/(ld.k+ld.s)-r21.c21/r21.tv21)*100;html+=`<br><span style="font-size:9px;color:${diff>0?COVER:CUNDER};font-weight:600">Sánchez vs. Castillo: ${diff>=0?'+':''}${diff.toFixed(1)}pp</span>`;}
+    tt.style.display='block';tt.style.left=(e.clientX+14)+'px';tt.style.top=(e.clientY-10)+'px';tt.innerHTML=html;
   });
   wrap.addEventListener('mouseleave',()=>{tt.style.display='none';});
 }
 
 // ── LEGEND ────────────────────────────────────────────────────────────────────
-function renderLegend(type) {
-  const el=id('sb-l'), tl=id('sb-t');
+function renderLegend(type){
+  const el=id('sb-l'),tl=id('sb-t');
   const cfgs={
-    runoff:   {t:'Keiko vs. Sánchez',      cb:true,  ll:'Sánchez',lc:CS, rl:'Keiko',rc:CK},
-    margin:   {t:'Burbujas — Margen',       bubble:true, items:[{c:CK,l:'Keiko adelante'},{c:CS,l:'Sánchez adelante'}], note:'Tamaño = margen de votos'},
-    pending:  {t:'Mesas pendientes',        bubble:true, items:[{c:'#888',l:'Mesas no contabilizadas'}], note:'Tamaño = actas pendientes · Fondo = resultado actual'},
-    r1:       {t:'1ra Vuelta 2026',         cb:true,  ll:'Sánchez',lc:CS, rl:'Keiko',rc:CK, note:'% votos válidos sobre todos los candidatos'},
-    'growth-k':{t:'Keiko vs. Keiko 2021',  ou:true,  pos:'Supera 2021',neg:'Por debajo 2021'},
+    runoff:{t:'Keiko vs. Sánchez',cb:true,ll:'Sánchez',lc:CS,rl:'Keiko',rc:CK},
+    margin:{t:'Burbujas — Margen',bubble:true,items:[{c:CK,l:'Keiko adelante'},{c:CS,l:'Sánchez adelante'}],note:'Tamaño = margen de votos'},
+    pending:{t:'Mesas pendientes',bubble:true,items:[{c:'#888',l:'Mesas no contabilizadas'}],note:'Tamaño = actas pendientes · Fondo = resultado actual'},
+    r1:{t:'1ra Vuelta 2026',cb:true,ll:'Sánchez',lc:CS,rl:'Keiko',rc:CK,note:'% sobre total votos válidos'},
+    'growth-k':{t:'Keiko vs. Keiko 2021',ou:true,pos:'Supera 2021',neg:'Por debajo 2021'},
     'growth-s':{t:'Sánchez vs. Castillo 2021',ou:true,pos:'Supera Castillo',neg:'Por debajo Castillo'},
   };
-  const c=cfgs[type]||cfgs.runoff;
-  tl.textContent=c.t;
+  const c=cfgs[type]||cfgs.runoff; tl.textContent=c.t;
   let html='';
-  if (c.cb) {
-    html=`<div class="ms-cb" style="background:linear-gradient(to right,${c.lc},#f5f3ee,${c.rc})"></div>
-    <div class="ms-cl"><span style="color:${c.lc}">${c.ll}</span><span>50/50</span><span style="color:${c.rc}">${c.rl}</span></div>
-    <div class="ms-it" style="margin-top:6px"><div class="ms-sw" style="background:${CN}"></div><span>Sin datos</span></div>`;
-    if (c.note) html+=`<div style="font-size:8px;color:var(--faint);margin-top:3px">${c.note}</div>`;
-  } else if (c.ou) {
-    html=`<div class="ms-cb" style="background:linear-gradient(to right,${CUNDER},#f5f3ee,${COVER})"></div>
-    <div class="ms-cl"><span style="color:${CUNDER}">${c.neg}</span><span style="color:${COVER}">${c.pos}</span></div>
-    <div class="ms-it" style="margin-top:6px"><div class="ms-sw" style="background:${CN}"></div><span>Sin datos</span></div>`;
-  } else if (c.bubble) {
-    html=(c.items||[]).map(i=>`<div class="ms-it"><div style="width:13px;height:13px;border-radius:50%;background:${i.c};opacity:.75;flex-shrink:0"></div><span>${i.l}</span></div>`).join('');
-    if (c.note) html+=`<div style="font-size:8px;color:var(--faint);margin-top:3px">${c.note}</div>`;
-  }
+  if(c.cb){html=`<div class="ms-cb" style="background:linear-gradient(to right,${c.lc},#f5f3ee,${c.rc})"></div><div class="ms-cl"><span style="color:${c.lc}">${c.ll}</span><span>50/50</span><span style="color:${c.rc}">${c.rl}</span></div><div class="ms-it" style="margin-top:6px"><div class="ms-sw" style="background:${CN}"></div><span>Sin datos</span></div>`;if(c.note)html+=`<div style="font-size:8px;color:var(--faint);margin-top:3px">${c.note}</div>`;}
+  else if(c.ou){html=`<div class="ms-cb" style="background:linear-gradient(to right,${CUNDER},#f5f3ee,${COVER})"></div><div class="ms-cl"><span style="color:${CUNDER}">${c.neg}</span><span style="color:${COVER}">${c.pos}</span></div><div class="ms-it" style="margin-top:6px"><div class="ms-sw" style="background:${CN}"></div><span>Sin datos</span></div>`;}
+  else if(c.bubble){html=(c.items||[]).map(i=>`<div class="ms-it"><div style="width:13px;height:13px;border-radius:50%;background:${i.c};opacity:.75;flex-shrink:0"></div><span>${i.l}</span></div>`).join('');if(c.note)html+=`<div style="font-size:8px;color:var(--faint);margin-top:3px">${c.note}</div>`;}
   el.innerHTML=html;
 }
 
-function renderTopDists(type) {
-  const el=id('sb-top');
-  if (!S.r1){el.innerHTML='';return;}
+function renderTopDists(type){
+  const el=id('sb-top'); if(!S.r1){el.innerHTML='';return;}
   const rows=[...S.r1.values()].filter(d=>d.tv>0)
     .sort((a,b)=>((S.lByU?.get(b.u)?.k||0)+(S.lByU?.get(b.u)?.s||0))-((S.lByU?.get(a.u)?.k||0)+(S.lByU?.get(a.u)?.s||0)))
     .slice(0,8);
-  el.innerHTML=rows.map(d=>{
-    const ld=S.lByU?.get(d.u), tv=ld?ld.k+ld.s:0;
-    const win=ld&&ld.k>ld.s, pct=tv>0?(win?ld.k/tv:ld.s/tv)*100:0;
-    return `<div class="ms-ro"><span class="ms-rn">${d.d}</span><span style="font-weight:600;color:${tv>0?(win?CK:CS):'var(--faint)'}">
-      ${tv>0?pct.toFixed(1)+'%':'—'}</span></div>`;
-  }).join('');
+  el.innerHTML=rows.map(d=>{const ld=S.lByU?.get(d.u),tv=ld?ld.k+ld.s:0;const win=ld&&ld.k>ld.s,pct=tv>0?(win?ld.k/tv:ld.s/tv)*100:0;return`<div class="ms-ro"><span class="ms-rn">${d.d}</span><span style="font-weight:600;color:${tv>0?(win?CK:CS):'var(--faint)'};">${tv>0?pct.toFixed(1)+'%':'—'}</span></div>`;}).join('');
 }
 
-// ── FLUJO DE VOTOS (full-width party rows) ────────────────────────────────────
-function updateFlujo() {
-  const has=S.lByU&&S.lByU.size>0;
-  id('mg-nd').style.display=has?'none':'';
+// ── FLUJO ─────────────────────────────────────────────────────────────────────
+function renderFlujo(){
+  const fl=S.flows;
+  id('mg-nd').style.display=fl?'none':'';
   const container=id('flujo-rows');
-  if (!has||!S.r1){container.innerHTML='';return;}
-
-  // Compute district-level correlations
-  const data=[];
-  for (const [u,r] of S.r1) {
-    const ld=S.lByU.get(u);
-    if (!ld||(ld.k+ld.s)===0||r.tv===0) continue;
-    const lv=ld.k+ld.s;
-    data.push({
-      kS2:ld.k/lv, sS2:ld.s/lv,
-      r1fp:r.k/r.tv, r1jpp:r.s/r.tv,
-      r1rla:r.rl/r.tv, r1nieto:r.n/r.tv,
-      // Approximate other parties from remainder
-      r1other:Math.max(0,1-(r.k+r.s+r.rl+r.n)/r.tv),
-      w:Math.min(ld.cm||1,20),
-    });
-  }
-  if (data.length<10){container.innerHTML='';return;}
-
-  const wS=data.reduce((s,d)=>s+d.w,0);
-  const wavg=k=>data.reduce((s,d)=>s+d.w*d[k],0)/wS;
-  const corr=(xk,yk='kS2')=>{
-    const mx=wavg(xk), my=wavg(yk);
-    const cov=data.reduce((s,d)=>s+d.w*(d[xk]-mx)*(d[yk]-my),0)/wS;
-    const sx=Math.sqrt(data.reduce((s,d)=>s+d.w*(d[xk]-mx)**2,0)/wS);
-    const sy=Math.sqrt(data.reduce((s,d)=>s+d.w*(d[yk]-my)**2,0)/wS);
-    return sx*sy>0?cov/(sx*sy):0;
-  };
-
-  // For each source party, estimate flows to: keiko, sanchez, blanco, nulo, no vota
-  // Using correlation as a proxy for flow direction
-  const parties=[
-    {key:'r1fp',   name:'Fuerza Popular',           fullname:'Fuerza Popular (Keiko Fujimori)', color:CK,       kFlow:0.88, sFlow:0.06, blFlow:0.03, nuFlow:0.02, nvFlow:0.01},
-    {key:'r1jpp',  name:'Juntos por el Perú',        fullname:'Juntos por el Perú (Roberto Sánchez)', color:CS, kFlow:0.06, sFlow:0.85, blFlow:0.05, nuFlow:0.03, nvFlow:0.01},
-    {key:'r1rla',  name:'Renovación Popular',        fullname:'Renovación Popular (RLA)',       color:'#1e3a8a', kFlow:0.62, sFlow:0.22, blFlow:0.08, nuFlow:0.05, nvFlow:0.03},
-    {key:'r1nieto',name:'Partido del Buen Gobierno', fullname:'Partido del Buen Gobierno (Nieto)', color:'#d97706', kFlow:0.44, sFlow:0.38, blFlow:0.10, nuFlow:0.05, nvFlow:0.03},
-    {key:'r1other',name:'Partido Cívico Obras',      fullname:'Partido Cívico Obras',           color:'#7c3aed', kFlow:0.32, sFlow:0.38, blFlow:0.14, nuFlow:0.10, nvFlow:0.06},
-    {key:'r1other',name:'País para Todos',           fullname:'País para Todos',               color:'#0891b2', kFlow:0.28, sFlow:0.42, blFlow:0.14, nuFlow:0.10, nvFlow:0.06},
-    {key:'r1other',name:'Ahora Nación',              fullname:'Ahora Nación',                  color:'#be185d', kFlow:0.30, sFlow:0.40, blFlow:0.13, nuFlow:0.10, nvFlow:0.07},
-  ];
-
-  // Adjust flows based on observed correlations
-  const corrFP=corr('r1fp'), corrJPP=corr('r1jpp'), corrRLA=corr('r1rla'), corrN=corr('r1nieto');
-  const adjFlow=(base,corr)=>clamp(base+corr*0.15,0.01,0.98);
-
-  parties[0].kFlow=adjFlow(0.88,corrFP);
-  parties[1].sFlow=adjFlow(0.85,corrJPP);
-  parties[2].kFlow=adjFlow(0.62,corrRLA);
-  parties[3].kFlow=adjFlow(0.44,corrN);
-
-  // Renormalize
-  parties.forEach(p=>{
-    const tot=p.kFlow+p.sFlow+p.blFlow+p.nuFlow+p.nvFlow;
-    p.kFlow/=tot; p.sFlow/=tot; p.blFlow/=tot; p.nuFlow/=tot; p.nvFlow/=tot;
-  });
-
-  const flows=[
-    {id:'keiko',  label:'Keiko',   color:CK,       getV:p=>p.kFlow},
-    {id:'sanchez',label:'Sánchez', color:CS,        getV:p=>p.sFlow},
-    {id:'blanco', label:'Blanco',  color:'#b0a898', getV:p=>p.blFlow},
-    {id:'nulo',   label:'Nulo',    color:'#888',    getV:p=>p.nuFlow},
-    {id:'novota', label:'No vota', color:'#ccc',    getV:p=>p.nvFlow},
-  ];
-
-  container.innerHTML=parties.map(p=>`
+  if(!fl){container.innerHTML='';return;}
+  const DEST_LABELS=['keiko','sanchez','blanco','nulo','no_vota'];
+  const DEST_NAMES=['Keiko','Sánchez','Blanco','Nulo','No vota'];
+  const DEST_COLORS=[CK,CS,'#b0a898','#888','#ccc'];
+  container.innerHTML=fl.parties.map(p=>`
     <div class="flujo-party">
-      <div class="fp-header">
+      <div class="fp-hdr">
         <div class="fp-dot" style="background:${p.color}"></div>
-        <div class="fp-name">${p.fullname}</div>
+        <div class="fp-nm">${p.name}</div>
       </div>
       <div class="fp-flows">
-        ${flows.map(f=>{
-          const pct=Math.round(f.getV(p)*100);
-          return `<div class="fp-flow">
-            <div class="fp-flow-bar-wrap">
-              <div class="fp-flow-bar" style="height:${pct}%;background:${f.color};opacity:0.85"></div>
-            </div>
-            <div class="fp-flow-pct">${pct}%</div>
-            <div class="fp-flow-lbl" style="color:${f.color};font-weight:600">${f.label}</div>
-          </div>`;
-        }).join('')}
+        ${DEST_LABELS.map((d,i)=>{const pct=Math.round((p[`to_${d}`]||0)*100);return`<div class="fp-flow">
+          <div class="fp-flow-bw"><div class="fp-flow-bar" style="height:${pct}%;background:${DEST_COLORS[i]};opacity:0.85"></div></div>
+          <div class="fp-flow-pct">${pct}%</div>
+          <div class="fp-flow-lbl" style="color:${DEST_COLORS[i]}">${DEST_NAMES[i]}</div>
+        </div>`;}).join('')}
       </div>
     </div>`).join('');
+  // Note
+  const note=document.createElement('div');
+  note.style.cssText='font-size:9px;color:var(--faint);text-align:center;margin:6px 0 2px';
+  note.textContent=`Basado en ${fmt(fl.meta?.n_tables||0)} mesas contabilizadas en ${fl.meta?.n_districts||0} distritos · ${fl.meta?.n_bootstrap||0} iteraciones bootstrap`;
+  container.appendChild(note);
 }
 
 // ── DEPT TABLE ────────────────────────────────────────────────────────────────
-function updateDepts() {
-  if (!S.lByU||S.lByU.size===0||!S.r1) return;
+function updateDepts(){
+  if(!S.lByU||!S.lByU.size||!S.r1)return;
   const depts={};
-  for (const [u,r] of S.r1) {
-    const dept=r.r||'Desconocido';
-    if (!depts[dept]) depts[dept]={name:dept,r1tm:0,lk:0,ls:0,lm:0};
-    depts[dept].r1tm+=r.tm;
-    const ld=S.lByU.get(u);
-    if (ld){depts[dept].lk+=ld.k||0;depts[dept].ls+=ld.s||0;depts[dept].lm+=ld.cm||0;}
-  }
+  for(const[u,r]of S.r1){const dept=r.r||'Desconocido';if(!depts[dept])depts[dept]={name:dept,r1tm:0,lk:0,ls:0,lm:0};depts[dept].r1tm+=r.tm;const ld=S.lByU.get(u);if(ld){depts[dept].lk+=ld.k||0;depts[dept].ls+=ld.s||0;depts[dept].lm+=ld.cm||0;}}
   const rows=Object.values(depts).sort((a,b)=>(b.lk+b.ls)-(a.lk+a.ls));
-  id('dept-tb').innerHTML=rows.map(r=>{
-    const tv=r.lk+r.ls; if(!tv) return '';
-    const kP=r.lk/tv*100, m=r.lk-r.ls, mP=m/tv*100, pR=r.r1tm>0?r.lm/r.r1tm*100:0;
-    return `<tr>
-      <td style="font-weight:600">${r.name}</td>
-      <td><span style="color:${CK}">${kP.toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.lk)}</span></td>
-      <td><span style="color:${CS}">${(100-kP).toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.ls)}</span></td>
-      <td style="color:${m>=0?CK:CS};font-weight:600">${m>=0?'+':''}${mP.toFixed(1)}%</td>
-      <td><div style="display:flex;align-items:center;gap:3px">
-        <div style="flex:1;height:3px;background:var(--bg);border-radius:2px;overflow:hidden">
-          <div style="height:100%;width:${pR.toFixed(1)}%;background:#2d6a4f"></div>
-        </div>${pR.toFixed(0)}%</div></td>
-      <td style="color:var(--faint)">${fmt(r.lm)}/${fmt(r.r1tm)}</td>
-    </tr>`;
-  }).join('');
-}
-
-// ── MASTER UPDATE ─────────────────────────────────────────────────────────────
-function updateUI() {
-  updateBar();
-  updateForecast();
-  if (S.mapLoaded) renderMap();  // always re-render map on data update
-  updateDepts();
-  updateFlujo();
+  id('dept-tb').innerHTML=rows.map(r=>{const tv=r.lk+r.ls;if(!tv)return'';const kP=r.lk/tv*100,m=r.lk-r.ls,mP=m/tv*100,pR=r.r1tm>0?r.lm/r.r1tm*100:0;return`<tr><td style="font-weight:600">${r.name}</td><td><span style="color:${CK}">${kP.toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.lk)}</span></td><td><span style="color:${CS}">${(100-kP).toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.ls)}</span></td><td style="color:${m>=0?CK:CS};font-weight:600">${m>=0?'+':''}${mP.toFixed(1)}%</td><td><div style="display:flex;align-items:center;gap:3px"><div style="flex:1;height:3px;background:var(--bg);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pR.toFixed(1)}%;background:#2d6a4f"></div></div>${pR.toFixed(0)}%</div></td><td style="color:var(--faint)">${fmt(r.lm)}/${fmt(r.r1tm)}</td></tr>`;}).join('');
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
-function normalCDF(z){const t=1/(1+0.3275911*Math.abs(z));const p=t*(0.254829592+t*(-0.284496736+t*(1.421413741+t*(-1.453152027+t*1.061405429))));const v=1-p*Math.exp(-z*z/2);return z>=0?v:1-v;}
-function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
 function fmt(n){if(n==null)return'—';return Math.round(n).toLocaleString('es-PE');}
 function id(x){return document.getElementById(x);}
 function set(x,v){const el=id(x);if(el)el.textContent=v;}
