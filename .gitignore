@@ -1,0 +1,13 @@
+data/*.parquet
+data/*.csv
+data/*.cpg
+data/*.dbf
+data/*.prj
+data/*.qmd
+data/*.shx
+data/*.shp
+.DS_Store
+__pycache__/
+prep_data.py
+generate_map_svg.py
+scraper_runoff.py
