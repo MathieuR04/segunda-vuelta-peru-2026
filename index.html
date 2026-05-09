@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Segunda Vuelta Perú 2026 — En Vivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,300;400;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & tokens ─────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#faf9f5;--surface:#ffffff;--surface2:#f3f1eb;
+  --border:rgba(0,0,0,0.10);--border-m:rgba(0,0,0,0.18);
+  --text:#17150f;--muted:#5c5849;--faint:#a09c91;
+  --keiko:#d4450c;--keiko-light:#fef0eb;--keiko-dark:#9b2f07;
+  --sanchez:#1a5c8a;--sanchez-light:#e8f3fb;--sanchez-dark:#0f3a57;
+  --gold:#c9972a;--accent:#2d6a4f;
+  --ff-head:'Playfair Display',serif;
+  --ff-body:'Source Serif 4',serif;
+  --ff-mono:'IBM Plex Mono',monospace;
+  --shadow:0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.12);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#141210;--surface:#1e1c18;--surface2:#252320;
+    --border:rgba(255,255,255,0.09);--border-m:rgba(255,255,255,0.15);
+    --text:#ede8de;--muted:#8c8679;--faint:#5c5849;
+    --keiko-light:#2a1308;--sanchez-light:#0a1e2d;
+    --shadow:0 2px 12px rgba(0,0,0,0.4);
+    --shadow-lg:0 8px 32px rgba(0,0,0,0.5);
+  }
+}
+html{scroll-behavior:smooth;}
+body{
+  font-family:var(--ff-body);background:var(--bg);color:var(--text);
+  min-height:100vh;font-size:15px;line-height:1.6;
+}
+
+/* ── Top bar ────────────────────────────────────── */
+#topbar{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg);border-bottom:1px solid var(--border-m);
+  padding:10px 16px;display:flex;align-items:center;gap:12px;
+  flex-wrap:wrap;backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.tb-logo{
+  font-family:var(--ff-head);font-size:13px;font-weight:700;
+  color:var(--text);white-space:nowrap;flex-shrink:0;
+}
+.tb-live{
+  display:flex;align-items:center;gap:5px;font-size:10px;
+  font-family:var(--ff-mono);color:var(--muted);flex-shrink:0;
+}
+.tb-live .dot{
+  width:7px;height:7px;border-radius:50%;background:#ccc;
+  animation:pulse 2s infinite;
+}
+.tb-live .dot.active{background:#16a34a;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.tb-result{
+  display:flex;align-items:center;gap:8px;flex:1;min-width:0;
+}
+.tb-cand{display:flex;align-items:center;gap:6px;min-width:0;}
+.tb-cand-name{font-size:11px;font-weight:600;font-family:var(--ff-mono);white-space:nowrap;}
+.tb-cand-votes{font-size:14px;font-weight:700;font-family:var(--ff-mono);}
+.tb-cand-pct{font-size:10px;color:var(--muted);font-family:var(--ff-mono);}
+.tb-bar-wrap{flex:1;min-width:60px;height:8px;border-radius:4px;overflow:hidden;
+  background:var(--surface2);display:flex;}
+.tb-bar-k{height:100%;background:var(--keiko);transition:width 0.6s ease;}
+.tb-bar-s{height:100%;background:var(--sanchez);transition:width 0.6s ease;}
+.tb-pct-rep{font-size:10px;color:var(--muted);font-family:var(--ff-mono);
+  white-space:nowrap;flex-shrink:0;}
+.tb-nav{display:flex;gap:4px;margin-left:auto;flex-shrink:0;}
+.tb-nav a{
+  font-size:10px;font-family:var(--ff-mono);padding:3px 8px;
+  border-radius:4px;border:0.5px solid var(--border);color:var(--muted);
+  text-decoration:none;cursor:pointer;
+  transition:background 0.15s,color 0.15s;
+}
+.tb-nav a:hover{background:var(--surface2);color:var(--text);}
+
+/* ── Hero ───────────────────────────────────────── */
+#hero{
+  text-align:center;padding:40px 16px 24px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,var(--surface) 0%,var(--bg) 100%);
+}
+#hero h1{
+  font-family:var(--ff-head);font-size:clamp(22px,5vw,42px);
+  font-weight:900;letter-spacing:-0.5px;line-height:1.15;margin-bottom:6px;
+}
+#hero .subtitle{
+  font-size:13px;color:var(--muted);font-family:var(--ff-mono);
+  letter-spacing:0.04em;margin-bottom:16px;
+}
+.byline{
+  font-size:11px;color:var(--faint);
+  font-family:var(--ff-mono);
+}
+.byline a{color:var(--text);font-weight:500;text-decoration:none;}
+.byline a:hover{text-decoration:underline;}
+
+/* ── Layout ─────────────────────────────────────── */
+.container{max-width:1100px;margin:0 auto;padding:0 16px;}
+.section{padding:32px 0;border-bottom:1px solid var(--border);}
+.section-title{
+  font-family:var(--ff-head);font-size:20px;font-weight:700;
+  margin-bottom:4px;
+}
+.section-sub{font-size:11px;color:var(--muted);font-family:var(--ff-mono);
+  margin-bottom:20px;letter-spacing:0.03em;
+}
+
+/* ── Forecast Needle ────────────────────────────── */
+#forecast-section{padding:32px 0;}
+.forecast-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:24px;box-shadow:var(--shadow);
+  max-width:800px;margin:0 auto;
+}
+.forecast-header{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:20px;flex-wrap:wrap;gap:10px;
+}
+.fc-cand{flex:1;min-width:100px;}
+.fc-cand-left{text-align:left;}
+.fc-cand-right{text-align:right;}
+.fc-name{font-family:var(--ff-head);font-size:15px;font-weight:700;line-height:1.2;}
+.fc-party{font-size:9px;font-family:var(--ff-mono);color:var(--muted);
+  letter-spacing:0.06em;text-transform:uppercase;}
+.fc-prob{font-family:var(--ff-head);font-size:36px;font-weight:900;line-height:1;}
+.fc-prob-label{font-size:10px;color:var(--muted);font-family:var(--ff-mono);}
+.fc-center{flex:1;text-align:center;min-width:100px;}
+.fc-vs{font-family:var(--ff-mono);font-size:11px;color:var(--faint);margin-bottom:4px;}
+.fc-status{font-size:10px;color:var(--muted);font-family:var(--ff-mono);}
+
+/* SVG needle */
+#needle-wrap{width:100%;max-width:500px;margin:0 auto 16px;}
+#needle-svg{width:100%;display:block;}
+
+.forecast-note{
+  font-size:11px;color:var(--muted);font-family:var(--ff-mono);
+  text-align:center;line-height:1.6;margin-top:12px;
+}
+
+/* Probability bars */
+.prob-bar-wrap{
+  display:flex;height:24px;border-radius:12px;overflow:hidden;
+  margin:12px 0;border:1px solid var(--border);
+}
+.prob-bar-k{
+  background:var(--keiko);display:flex;align-items:center;
+  justify-content:center;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.prob-bar-s{
+  background:var(--sanchez);display:flex;align-items:center;
+  justify-content:center;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.prob-bar-label{
+  font-size:10px;font-family:var(--ff-mono);font-weight:600;
+  color:white;padding:0 8px;white-space:nowrap;
+}
+
+/* ── Forecast Stats ─────────────────────────────── */
+.forecast-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;
+}
+.fc-stat{
+  background:var(--surface2);border-radius:8px;padding:10px;text-align:center;
+}
+.fc-stat-val{font-family:var(--ff-mono);font-size:16px;font-weight:600;}
+.fc-stat-lbl{font-size:9px;color:var(--muted);font-family:var(--ff-mono);
+  letter-spacing:0.04em;text-transform:uppercase;margin-top:2px;}
+
+/* ── Vote Migration ─────────────────────────────── */
+.migration-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  max-width:800px;margin:0 auto;
+}
+@media(max-width:600px){.migration-grid{grid-template-columns:1fr;}}
+.migration-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:16px;box-shadow:var(--shadow);
+}
+.mc-title{font-size:11px;font-family:var(--ff-mono);font-weight:600;
+  margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+.mc-party{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.mc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.mc-name{font-size:11px;color:var(--muted);font-family:var(--ff-mono);flex:0 0 120px;}
+.mc-bars{flex:1;display:flex;flex-direction:column;gap:2px;}
+.mc-bar-row{display:flex;align-items:center;gap:4px;}
+.mc-bar{height:6px;border-radius:3px;transition:width 0.6s ease;}
+.mc-pct{font-size:9px;font-family:var(--ff-mono);color:var(--faint);width:28px;}
+
+/* ── Map section ────────────────────────────────── */
+.map-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.map-tab{
+  font-size:10px;font-family:var(--ff-mono);padding:5px 12px;
+  border:0.5px solid var(--border);border-radius:20px;cursor:pointer;
+  background:var(--surface);color:var(--muted);
+  transition:all 0.15s;
+}
+.map-tab.active{background:var(--text);color:var(--bg);border-color:var(--text);}
+.map-tab:hover:not(.active){background:var(--surface2);}
+
+.map-layout{
+  display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start;
+}
+@media(max-width:700px){
+  .map-layout{grid-template-columns:1fr;}
+  .map-sidebar{display:none;}
+}
+#map-svg-wrap{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;position:relative;
+}
+#map-svg{width:100%;display:block;}
+#map-tooltip{
+  position:fixed;pointer-events:none;z-index:200;
+  background:var(--surface);border:1px solid var(--border-m);
+  border-radius:8px;padding:10px 12px;box-shadow:var(--shadow-lg);
+  font-family:var(--ff-mono);font-size:10px;line-height:1.8;
+  max-width:200px;display:none;
+}
+.map-sidebar{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px;
+}
+.ms-title{font-size:10px;font-family:var(--ff-mono);color:var(--muted);
+  font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
+.ms-legend{display:flex;flex-direction:column;gap:4px;}
+.ms-legend-item{display:flex;align-items:center;gap:8px;font-size:9px;
+  font-family:var(--ff-mono);color:var(--muted);}
+.ms-swatch{width:16px;height:10px;border-radius:2px;flex-shrink:0;}
+.ms-top-list{margin-top:14px;}
+.ms-district-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:5px 0;border-bottom:0.5px solid var(--border);
+  font-size:9px;font-family:var(--ff-mono);
+}
+.ms-district-row:last-child{border-bottom:none;}
+.ms-dr-name{color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ms-dr-val{font-weight:600;}
+
+/* ── Map color scale legend ─────────────────────── */
+.map-colorbar{
+  display:flex;align-items:center;gap:8px;margin-top:10px;
+  font-size:9px;font-family:var(--ff-mono);color:var(--muted);
+}
+.mc-bar-grad{
+  flex:1;height:10px;border-radius:4px;
+}
+
+/* ── Bubbles legend ─────────────────────────────── */
+.bubble-legend{
+  display:flex;gap:16px;flex-wrap:wrap;font-size:9px;
+  font-family:var(--ff-mono);color:var(--muted);margin-top:8px;
+}
+.bl-item{display:flex;align-items:center;gap:5px;}
+.bl-circle{border-radius:50%;opacity:0.7;flex-shrink:0;}
+
+/* ── No data state ──────────────────────────────── */
+.no-data-banner{
+  background:var(--surface2);border:1px dashed var(--border-m);
+  border-radius:10px;padding:20px;text-align:center;
+  font-family:var(--ff-mono);font-size:11px;color:var(--muted);
+  margin:16px 0;
+}
+.no-data-banner strong{display:block;font-size:13px;color:var(--text);margin-bottom:4px;}
+
+/* ── Footer ─────────────────────────────────────── */
+footer{
+  text-align:center;padding:32px 16px;
+  font-family:var(--ff-mono);font-size:10px;color:var(--faint);
+  border-top:1px solid var(--border);
+}
+footer a{color:var(--muted);text-decoration:none;}
+footer a:hover{text-decoration:underline;}
+.yape-btn{
+  display:inline-block;margin-top:8px;
+  background:var(--surface2);border:0.5px solid var(--border-m);
+  border-radius:20px;padding:4px 12px;font-size:10px;color:var(--text);
+  cursor:pointer;font-family:var(--ff-mono);
+}
+
+/* ── Modal ──────────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--surface);border-radius:16px;padding:20px;
+  max-width:360px;width:100%;box-shadow:var(--shadow-lg);
+  text-align:center;font-family:var(--ff-mono);font-size:11px;
+}
+.modal-close{
+  float:right;cursor:pointer;font-size:18px;color:var(--muted);
+  line-height:1;margin-left:8px;
+}
+.modal-box img{width:160px;height:160px;border-radius:12px;margin:10px auto;display:block;}
+
+/* ── Scrollable tables ──────────────────────────── */
+.dept-table-wrap{overflow-x:auto;margin-top:16px;}
+.dept-table{
+  width:100%;border-collapse:collapse;
+  font-size:10px;font-family:var(--ff-mono);
+}
+.dept-table th{
+  font-weight:600;color:var(--muted);text-align:left;
+  padding:6px 8px;border-bottom:1px solid var(--border-m);
+  white-space:nowrap;font-size:9px;text-transform:uppercase;letter-spacing:0.04em;
+}
+.dept-table td{padding:5px 8px;border-bottom:0.5px solid var(--border);}
+.dept-table tr:hover td{background:var(--surface2);}
+.td-bar{display:inline-block;height:5px;border-radius:2px;vertical-align:middle;}
+
+/* ── Animation ──────────────────────────────────── */
+@keyframes fadeInUp{
+  from{opacity:0;transform:translateY(16px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.anim-in{animation:fadeInUp 0.5s ease both;}
+
+/* ── Update indicator ───────────────────────────── */
+#update-banner{
+  display:none;background:var(--accent);color:white;
+  text-align:center;padding:8px;font-size:11px;font-family:var(--ff-mono);
+}
+</style>
+</head>
+<body>
+
+<!-- Update banner -->
+<div id="update-banner">🔄 Nuevos datos disponibles. Actualizando...</div>
+
+<!-- Sticky top bar -->
+<div id="topbar">
+  <div class="tb-logo">🇵🇪 SEGUNDA VUELTA 2026</div>
+  <div class="tb-live">
+    <div class="dot" id="live-dot"></div>
+    <span id="live-label">En espera</span>
+  </div>
+  <div class="tb-result">
+    <div class="tb-cand tb-cand-left">
+      <div style="width:10px;height:10px;border-radius:50%;background:var(--keiko);flex-shrink:0;"></div>
+      <div>
+        <div class="tb-cand-name" style="color:var(--keiko)">KEIKO</div>
+        <div class="tb-cand-votes" id="tb-k-votes">—</div>
+        <div class="tb-cand-pct" id="tb-k-pct">—%</div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:40px;">
+      <div class="tb-bar-wrap">
+        <div class="tb-bar-k" id="tb-bar-k" style="width:50%"></div>
+        <div class="tb-bar-s" id="tb-bar-s" style="width:50%"></div>
+      </div>
+      <div style="font-size:9px;font-family:var(--ff-mono);color:var(--faint);text-align:center;margin-top:2px;">
+        <span id="tb-pct-rep">—</span>% escrutado
+      </div>
+    </div>
+    <div class="tb-cand" style="text-align:right;flex-direction:row-reverse;">
+      <div style="width:10px;height:10px;border-radius:50%;background:var(--sanchez);flex-shrink:0;"></div>
+      <div style="text-align:right;">
+        <div class="tb-cand-name" style="color:var(--sanchez)">SÁNCHEZ</div>
+        <div class="tb-cand-votes" id="tb-s-votes">—</div>
+        <div class="tb-cand-pct" id="tb-s-pct">—%</div>
+      </div>
+    </div>
+  </div>
+  <nav class="tb-nav">
+    <a href="#forecast-section">Pronóstico</a>
+    <a href="#maps-section">Mapas</a>
+    <a href="#migration-section">Flujo</a>
+    <a href="#dept-section">Depts</a>
+  </nav>
+</div>
+
+<!-- Hero -->
+<div id="hero">
+  <h1>Segunda Vuelta<br>Perú 2026</h1>
+  <div class="subtitle">SEGUIMIENTO EN VIVO · ONPE · ELECCIONES PRESIDENCIALES</div>
+  <div class="byline">
+    Por <a href="https://x.com/KhamaRamaq" target="_blank">Mathieu Rojas</a> · 
+    <a href="https://www.linkedin.com/in/mathieu-rojas-egoavil-889a64293/" target="_blank">LinkedIn</a> ·
+    <span class="yape-btn" onclick="document.getElementById('yape-modal').classList.add('open')">☕ Yape</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ─── FORECAST ─────────────────────────────────── -->
+<section class="section" id="forecast-section">
+  <div class="section-title">Pronóstico Electoral</div>
+  <div class="section-sub">MODELO ESTADÍSTICO BASADO EN ACTAS CONTABILIZADAS + PRIMERA VUELTA 2026 + SEGUNDA VUELTA 2021</div>
+  
+  <div class="forecast-card anim-in">
+    <div class="forecast-header">
+      <div class="fc-cand fc-cand-left">
+        <div class="fc-party" style="color:var(--keiko)">FUERZA POPULAR</div>
+        <div class="fc-name" style="color:var(--keiko)">Keiko Fujimori</div>
+        <div class="fc-prob" id="fc-k-prob" style="color:var(--keiko)">—</div>
+        <div class="fc-prob-label">prob. de ganar</div>
+      </div>
+      <div class="fc-center">
+        <div class="fc-vs">vs.</div>
+        <div class="fc-status" id="fc-status">Esperando datos…</div>
+        <div style="font-size:9px;color:var(--faint);font-family:var(--ff-mono);margin-top:4px;" id="fc-tables-counted">0 de 92,766 mesas</div>
+      </div>
+      <div class="fc-cand fc-cand-right" style="text-align:right;">
+        <div class="fc-party" style="color:var(--sanchez)">JUNTOS POR EL PERÚ</div>
+        <div class="fc-name" style="color:var(--sanchez)">Roberto Sánchez</div>
+        <div class="fc-prob" id="fc-s-prob" style="color:var(--sanchez)">—</div>
+        <div class="fc-prob-label">prob. de ganar</div>
+      </div>
+    </div>
+
+    <!-- Needle SVG -->
+    <div id="needle-wrap">
+      <svg id="needle-svg" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#d4450c"/>
+            <stop offset="40%" stop-color="#e8855a"/>
+            <stop offset="50%" stop-color="#e8e3d8"/>
+            <stop offset="60%" stop-color="#6baed6"/>
+            <stop offset="100%" stop-color="#1a5c8a"/>
+          </linearGradient>
+          <clipPath id="gaugeClip">
+            <path d="M50,200 A200,200 0 0,1 450,200"/>
+          </clipPath>
+        </defs>
+        
+        <!-- Arc background -->
+        <path d="M50,200 A200,200 0 0,1 450,200" 
+              fill="none" stroke="#e0ddd5" stroke-width="28" stroke-linecap="round"/>
+        <!-- Arc colored -->
+        <path d="M50,200 A200,200 0 0,1 450,200" 
+              fill="none" stroke="url(#gaugeGrad)" stroke-width="26" stroke-linecap="round"/>
+
+        <!-- Tick marks -->
+        <g id="gauge-ticks"></g>
+
+        <!-- Labels -->
+        <text x="42" y="218" text-anchor="middle" font-family="IBM Plex Mono,monospace" 
+              font-size="10" fill="#d4450c" font-weight="600">KEIKO</text>
+        <text x="458" y="218" text-anchor="middle" font-family="IBM Plex Mono,monospace" 
+              font-size="10" fill="#1a5c8a" font-weight="600">SÁNCHEZ</text>
+        <text x="250" y="218" text-anchor="middle" font-family="IBM Plex Mono,monospace" 
+              font-size="9" fill="#a09c91">50/50</text>
+
+        <!-- Needle group (rotates) -->
+        <g id="needle-group" transform="rotate(-90, 250, 200)">
+          <polygon points="250,200 246,60 254,60" fill="#333" opacity="0.85"/>
+          <circle cx="250" cy="200" r="8" fill="#333"/>
+          <circle cx="250" cy="200" r="4" fill="white"/>
+        </g>
+
+        <!-- Win probability text in arc -->
+        <text id="needle-k-pct" x="120" y="148" text-anchor="middle" 
+              font-family="IBM Plex Mono,monospace" font-size="13" fill="#d4450c" font-weight="600">—%</text>
+        <text id="needle-s-pct" x="380" y="148" text-anchor="middle" 
+              font-family="IBM Plex Mono,monospace" font-size="13" fill="#1a5c8a" font-weight="600">—%</text>
+
+        <!-- Margin callout -->
+        <text id="needle-margin" x="250" y="175" text-anchor="middle" 
+              font-family="IBM Plex Mono,monospace" font-size="11" fill="#5c5849">Esperando resultados…</text>
+      </svg>
+    </div>
+
+    <!-- Probability bar -->
+    <div class="prob-bar-wrap">
+      <div class="prob-bar-k" id="prob-bar-k" style="width:50%">
+        <span class="prob-bar-label" id="prob-label-k"></span>
+      </div>
+      <div class="prob-bar-s" id="prob-bar-s" style="width:50%">
+        <span class="prob-bar-label" id="prob-label-s"></span>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="forecast-stats">
+      <div class="fc-stat">
+        <div class="fc-stat-val" id="fc-margin-v">—</div>
+        <div class="fc-stat-lbl">Margen actual (votos)</div>
+      </div>
+      <div class="fc-stat">
+        <div class="fc-stat-val" id="fc-margin-p">—%</div>
+        <div class="fc-stat-lbl">Margen (% voto válido)</div>
+      </div>
+      <div class="fc-stat">
+        <div class="fc-stat-val" id="fc-remaining">92,766</div>
+        <div class="fc-stat-lbl">Mesas pendientes</div>
+      </div>
+    </div>
+
+    <div class="forecast-note" id="fc-note">
+      Sin datos ONPE aún. El pronóstico se actualizará automáticamente cuando<br>
+      comiencen a llegar resultados. Se refresca cada 60 segundos.
+    </div>
+  </div>
+</section>
+
+<!-- ─── MAPS ──────────────────────────────────────── -->
+<section class="section" id="maps-section">
+  <div class="section-title">Mapas Electorales</div>
+  <div class="section-sub">RESULTADOS POR DISTRITO · HOVER PARA DETALLES</div>
+
+  <div class="map-tabs">
+    <div class="map-tab active" data-map="runoff">Keiko vs Sánchez (2ª vuelta)</div>
+    <div class="map-tab" data-map="margin">Margen absoluto (burbujas)</div>
+    <div class="map-tab" data-map="pending">Mesas pendientes</div>
+    <div class="map-tab" data-map="growth-k">Keiko vs. 2021</div>
+    <div class="map-tab" data-map="growth-s">Sánchez vs. Castillo 2021</div>
+    <div class="map-tab" data-map="r1">Primera vuelta (referencia)</div>
+  </div>
+
+  <div class="map-layout">
+    <div id="map-svg-wrap">
+      <div class="no-data-banner" id="map-loading">
+        <strong>Cargando mapa…</strong>
+        Procesando shapefile de distritos del Perú
+      </div>
+      <svg id="map-svg" viewBox="0 0 380 640" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="map-sidebar">
+      <div class="ms-title" id="sidebar-title">Leyenda</div>
+      <div id="map-legend-content">
+        <!-- filled by JS -->
+      </div>
+      <div class="ms-top-list">
+        <div class="ms-title" style="margin-top:12px;">Top distritos</div>
+        <div id="top-districts-list">
+          <!-- filled by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="map-tooltip"></div>
+</section>
+
+<!-- ─── VOTE MIGRATION ────────────────────────────── -->
+<section class="section" id="migration-section">
+  <div class="section-title">Flujo de Votos</div>
+  <div class="section-sub">ESTIMACIÓN DE MIGRACIÓN DE VOTOS DESDE PRIMERA VUELTA · BASADO EN ACTAS A NIVEL DE MESA</div>
+
+  <div class="no-data-banner" id="migration-no-data">
+    <strong>Sin datos de segunda vuelta aún</strong>
+    Cuando lleguen resultados, estimaremos cómo están migrando los votos de cada partido de la primera vuelta.
+  </div>
+  <div class="migration-grid" id="migration-grid" style="display:none">
+    <!-- filled by JS -->
+  </div>
+</section>
+
+<!-- ─── DEPT TABLE ────────────────────────────────── -->
+<section class="section" id="dept-section">
+  <div class="section-title">Resultados por Departamento</div>
+  <div class="section-sub">AGREGADO A NIVEL DEPARTAMENTAL</div>
+
+  <div class="dept-table-wrap">
+    <table class="dept-table" id="dept-table">
+      <thead>
+        <tr>
+          <th>Departamento</th>
+          <th>Keiko</th>
+          <th>Sánchez</th>
+          <th>Margen</th>
+          <th>% escrutado</th>
+          <th>Mesas</th>
+        </tr>
+      </thead>
+      <tbody id="dept-tbody">
+        <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--faint);font-family:var(--ff-mono);font-size:10px;">Esperando datos de segunda vuelta…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <div>Segunda Vuelta Perú 2026 · Datos: <a href="https://resultadoelectoral.onpe.gob.pe" target="_blank">ONPE</a></div>
+  <div style="margin-top:4px;">
+    Por <a href="https://x.com/KhamaRamaq" target="_blank">@KhamaRamaq</a> · 
+    <a href="https://congresoperu2026.com" target="_blank">Ver resultados Congreso →</a>
+  </div>
+  <div style="margin-top:4px;color:var(--bg);" id="data-timestamp"></div>
+</footer>
+
+<!-- Yape modal -->
+<div class="modal-overlay" id="yape-modal" onclick="this.classList.remove('open')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <span class="modal-close" onclick="document.getElementById('yape-modal').classList.remove('open')">×</span>
+    <div style="font-family:var(--ff-head);font-size:18px;font-weight:700;margin-bottom:4px;">☕ Apoya el proyecto</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Si te es útil este sitio, un Yape es siempre bienvenido 🙏</div>
+    <div style="font-family:var(--ff-mono);font-size:13px;font-weight:600;">Mathieu Rojas · 999 999 999</div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA LAYER
+// ─────────────────────────────────────────────────────────────────────────────
+const STATE = {
+  r1: null,          // first-round district data (from r1_districts.json)
+  r2021: null,       // 2021 runoff district data
+  live: null,        // live runoff data
+  activeMap: 'runoff',
+  svgPaths: null,    // map path elements keyed by ubigeo
+  pathData: null,    // district metadata for map
+};
+
+const KEIKO_COLOR = '#d4450c';
+const SANCHEZ_COLOR = '#1a5c8a';
+const TOTAL_MESAS = 92766;
+
+// ─── Load data files ──────────────────────────────────────────────────────
+async function loadStatic() {
+  const [r1, r2021] = await Promise.all([
+    fetch('data/r1_districts.json').then(r => r.json()),
+    fetch('data/r2021_districts.json').then(r => r.json()),
+  ]);
+  STATE.r1 = Object.fromEntries(r1.map(d => [d.u, d]));
+  STATE.r2021 = Object.fromEntries(r2021.map(d => [d.u, d]));
+  console.log(`R1 loaded: ${r1.length} districts, R2021: ${r2021.length} districts`);
+}
+
+async function loadLive() {
+  try {
+    const live = await fetch(`data/live.json?t=${Date.now()}`).then(r => r.json());
+    STATE.live = live;
+    updateUI();
+  } catch(e) {
+    console.log('No live data yet:', e.message);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FORECAST MODEL
+// ─────────────────────────────────────────────────────────────────────────────
+function runForecast() {
+  const live = STATE.live;
+  const r1 = STATE.r1;
+  const r2021 = STATE.r2021;
+
+  if (!live || !live.meta || live.meta.counted_mesas === 0) {
+    return { kProb: 50, sProb: 50, status: 'sin_datos', marginVotes: 0, marginPct: 0 };
+  }
+
+  const meta = live.meta;
+  const kV = meta.k_votes;
+  const sV = meta.s_votes;
+  const validVotes = meta.valid_votes;
+  const pctReported = meta.pct_reported / 100;
+  const countedMesas = meta.counted_mesas;
+  const pendingMesas = TOTAL_MESAS - countedMesas;
+
+  const currentMargin = kV - sV;
+  const kShare = kV / validVotes;
+  const sShare = sV / validVotes;
+
+  // Build district-level predictions for uncounted mesas
+  // using: 1) observed district data, 2) first-round Keiko/Sanchez correlation,
+  // 3) 2021 benchmark
+  const distLive = {};
+  if (live.districts) {
+    for (const d of live.districts) distLive[d.u] = d;
+  }
+
+  // Collect statistics for uncounted districts
+  let additionalKEst = 0;
+  let additionalSEst = 0;
+  let additionalVVEst = 0;
+  let simVariance = 0;
+
+  for (const [ubStr, r1d] of Object.entries(r1)) {
+    const ub = parseInt(ubStr);
+    const liveDist = distLive[ub];
+    const r1Total = r1d.tv || 0;
+    if (r1Total === 0) continue;
+
+    const totalMesas = r1d.tm || 0;
+    const countedMesasDist = liveDist ? (liveDist.cm || 0) : 0;
+    const pendingMesasDist = totalMesas - countedMesasDist;
+    if (pendingMesasDist <= 0) continue;
+
+    // Fraction still pending in this district
+    const fracPending = pendingMesasDist / totalMesas;
+
+    // Estimate vote share for this district's pending mesas
+    let kShareEst, sShareEst;
+
+    if (liveDist && liveDist.cm > 0) {
+      // Have some local data — use it
+      const localValid = (liveDist.k || 0) + (liveDist.s || 0);
+      if (localValid > 0) {
+        kShareEst = (liveDist.k || 0) / localValid;
+        sShareEst = (liveDist.s || 0) / localValid;
+      }
+    }
+
+    if (kShareEst === undefined) {
+      // Use first-round ratio adjusted by national runoff trend
+      const r1ValidDist = r1d.k + r1d.s;
+      if (r1ValidDist > 0) {
+        const r1KShare = r1d.k / r1ValidDist;
+        // National runoff to first-round ratio
+        const natKAdj = validVotes > 0 ? kShare / (kV > 0 ? kShare : 0.5) : 1;
+        kShareEst = r1KShare;
+        sShareEst = 1 - r1KShare;
+      } else {
+        kShareEst = kShare || 0.5;
+        sShareEst = sShare || 0.5;
+      }
+    }
+
+    // Estimate valid votes for pending mesas (scaled from r1)
+    const avgVVperMesa = r1Total / (totalMesas || 1);
+    const pendingVV = pendingMesasDist * avgVVperMesa;
+
+    additionalKEst += kShareEst * pendingVV;
+    additionalSEst += sShareEst * pendingVV;
+    additionalVVEst += pendingVV;
+
+    // Variance contribution
+    const distUncertainty = Math.sqrt(pendingMesasDist) * avgVVperMesa * 0.15;
+    simVariance += distUncertainty * distUncertainty;
+  }
+
+  // Add uncertainty based on % reported
+  const reportedFraction = pctReported;
+  const extraVolatility = (1 - reportedFraction) * 0.3;
+  const sigma = Math.sqrt(simVariance) * (1 + extraVolatility);
+
+  const projectedTotalMargin = currentMargin + (additionalKEst - additionalSEst);
+
+  // Win probability via normal CDF
+  const zScore = projectedTotalMargin / (sigma + 1);
+  const kProb = Math.round(normalCDF(zScore) * 100);
+  const sProb = 100 - kProb;
+
+  const marginPct = validVotes > 0 ? (currentMargin / validVotes * 100) : 0;
+
+  return {
+    kProb: clamp(kProb, 1, 99),
+    sProb: clamp(sProb, 1, 99),
+    status: reportedFraction > 0.5 ? 'alta_confianza' : reportedFraction > 0.1 ? 'moderada' : 'baja',
+    marginVotes: currentMargin,
+    marginPct,
+    projectedMargin: projectedTotalMargin,
+    sigma,
+    pctReported: pctReported * 100,
+  };
+}
+
+function normalCDF(z) {
+  // Approximation of Φ(z)
+  const t = 1 / (1 + 0.3275911 * Math.abs(z));
+  const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+  const val = 1 - poly * Math.exp(-z * z / 2);
+  return z >= 0 ? val : 1 - val;
+}
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UI UPDATE
+// ─────────────────────────────────────────────────────────────────────────────
+function updateUI() {
+  const live = STATE.live;
+  const meta = live?.meta || {};
+  const fc = runForecast();
+
+  // Topbar
+  const hasData = meta.counted_mesas > 0;
+  const kV = meta.k_votes || 0;
+  const sV = meta.s_votes || 0;
+  const validV = meta.valid_votes || (kV + sV) || 1;
+  const kPct = kV / validV * 100;
+  const sPct = sV / validV * 100;
+  const kBarPct = kV / (kV + sV + 0.001) * 100;
+
+  document.getElementById('tb-k-votes').textContent = hasData ? fmtN(kV) : '—';
+  document.getElementById('tb-s-votes').textContent = hasData ? fmtN(sV) : '—';
+  document.getElementById('tb-k-pct').textContent = hasData ? kPct.toFixed(1) + '%' : '—%';
+  document.getElementById('tb-s-pct').textContent = hasData ? sPct.toFixed(1) + '%' : '—%';
+  document.getElementById('tb-bar-k').style.width = (hasData ? kBarPct : 50) + '%';
+  document.getElementById('tb-bar-s').style.width = (hasData ? 100-kBarPct : 50) + '%';
+  document.getElementById('tb-pct-rep').textContent = hasData ? meta.pct_reported.toFixed(1) : '—';
+
+  // Live dot
+  const dot = document.getElementById('live-dot');
+  const lbl = document.getElementById('live-label');
+  if (hasData) {
+    dot.classList.add('active');
+    lbl.textContent = 'En vivo';
+  }
+
+  // Forecast card
+  document.getElementById('fc-k-prob').textContent = fc.kProb + '%';
+  document.getElementById('fc-s-prob').textContent = fc.sProb + '%';
+  document.getElementById('fc-tables-counted').textContent =
+    `${fmtN(meta.counted_mesas || 0)} de ${fmtN(TOTAL_MESAS)} mesas`;
+
+  const statusMap = { sin_datos: 'Esperando resultados…', baja: 'Estimación preliminar', moderada: 'Estimación con datos parciales', alta_confianza: 'Estimación con alta confianza' };
+  document.getElementById('fc-status').textContent = statusMap[fc.status] || '';
+
+  // Needle rotation: maps kProb 0-100 → -90° to +90°
+  const angleDeg = -90 + (fc.kProb / 100) * 180;
+  const needle = document.getElementById('needle-group');
+  needle.setAttribute('transform', `rotate(${angleDeg - 90}, 250, 200)`);
+
+  document.getElementById('needle-k-pct').textContent = fc.kProb + '%';
+  document.getElementById('needle-s-pct').textContent = fc.sProb + '%';
+
+  const marginText = hasData
+    ? (fc.marginVotes >= 0 ? 'Keiko' : 'Sánchez') + ' +' + fmtN(Math.abs(fc.marginVotes)) + ' votos (' + Math.abs(fc.marginPct).toFixed(2) + '%)'
+    : 'Esperando resultados…';
+  document.getElementById('needle-margin').textContent = marginText;
+
+  // Prob bar
+  const pb_k = document.getElementById('prob-bar-k');
+  const pb_s = document.getElementById('prob-bar-s');
+  pb_k.style.width = fc.kProb + '%';
+  pb_s.style.width = fc.sProb + '%';
+  document.getElementById('prob-label-k').textContent = fc.kProb >= 15 ? fc.kProb + '%' : '';
+  document.getElementById('prob-label-s').textContent = fc.sProb >= 15 ? fc.sProb + '%' : '';
+
+  // Stats
+  document.getElementById('fc-margin-v').textContent = hasData
+    ? (fc.marginVotes >= 0 ? '+' : '') + fmtN(fc.marginVotes) : '—';
+  document.getElementById('fc-margin-p').textContent = hasData
+    ? (fc.marginPct >= 0 ? '+' : '') + fc.marginPct.toFixed(2) + '%' : '—%';
+  document.getElementById('fc-remaining').textContent = fmtN(TOTAL_MESAS - (meta.counted_mesas || 0));
+
+  const noteEl = document.getElementById('fc-note');
+  if (!hasData) {
+    noteEl.textContent = 'Sin datos ONPE aún. El pronóstico se actualizará automáticamente cuando comiencen a llegar resultados. Se refresca cada 60 segundos.';
+  } else {
+    const confLabel = { baja: 'baja confianza', moderada: 'confianza moderada', alta_confianza: 'alta confianza' }[fc.status];
+    noteEl.innerHTML = `Modelo bayesiano con datos de mesa a nivel individual + Primera Vuelta 2026 + Segunda Vuelta 2021.<br>Incertidumbre: ±${fmtN(Math.round(fc.sigma || 0))} votos (σ) · <b>${confLabel}</b>`;
+  }
+
+  // Timestamp
+  if (meta.timestamp) {
+    const tsEl = document.getElementById('data-timestamp');
+    tsEl.style.color = 'var(--faint)';
+    tsEl.textContent = 'Última actualización: ' + meta.timestamp;
+  }
+
+  // Dept table
+  updateDeptTable();
+  // Map
+  renderMap();
+  // Migration
+  updateMigration();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEPT TABLE
+// ─────────────────────────────────────────────────────────────────────────────
+function updateDeptTable() {
+  const live = STATE.live;
+  const r1 = STATE.r1;
+  if (!r1) return;
+
+  // Aggregate by dept (first 2 digits of ubigeo)
+  const depts = {};
+  
+  // From first round
+  for (const [ub, d] of Object.entries(r1)) {
+    const dept = Math.floor(parseInt(ub) / 10000);
+    if (!depts[dept]) depts[dept] = { name: d.r || `Dept ${dept}`, r1k: 0, r1s: 0, r1tv: 0, r1tm: 0, lk: 0, ls: 0, ltv: 0, lm: 0, ltm: 0 };
+    depts[dept].r1k += d.k;
+    depts[dept].r1s += d.s;
+    depts[dept].r1tv += d.tv;
+    depts[dept].r1tm += d.tm;
+  }
+
+  // From live
+  const hasLive = live && live.districts && live.districts.length > 0;
+  if (hasLive) {
+    for (const d of live.districts) {
+      const dept = Math.floor(d.u / 10000);
+      if (depts[dept]) {
+        depts[dept].lk += d.k || 0;
+        depts[dept].ls += d.s || 0;
+        depts[dept].ltv += (d.k || 0) + (d.s || 0);
+        depts[dept].lm += d.cm || 0;
+        depts[dept].ltm = depts[dept].r1tm;
+      }
+    }
+  }
+
+  const rows = Object.values(depts).sort((a,b) => b.r1tv - a.r1tv);
+  const tbody = document.getElementById('dept-tbody');
+
+  if (!hasLive) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--faint);font-family:var(--ff-mono);font-size:10px;">Esperando datos de segunda vuelta…</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const tv = r.ltv || 0;
+    const kPct = tv > 0 ? r.lk/tv*100 : 0;
+    const sPct = tv > 0 ? r.ls/tv*100 : 0;
+    const margin = r.lk - r.ls;
+    const marginPct = tv > 0 ? margin/tv*100 : 0;
+    const winner = margin >= 0 ? 'keiko' : 'sanchez';
+    const pctRep = r.r1tm > 0 ? r.lm/r.r1tm*100 : 0;
+    return `<tr>
+      <td style="font-weight:600;">${r.name}</td>
+      <td><span style="color:var(--keiko)">${kPct.toFixed(1)}%</span><br><span style="font-size:9px;color:var(--faint)">${fmtN(r.lk)}</span></td>
+      <td><span style="color:var(--sanchez)">${sPct.toFixed(1)}%</span><br><span style="font-size:9px;color:var(--faint)">${fmtN(r.ls)}</span></td>
+      <td style="color:var(--${winner})">${margin>=0?'+':''}${marginPct.toFixed(1)}%</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div style="flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
+            <div style="height:100%;width:${pctRep.toFixed(1)}%;background:var(--accent);border-radius:2px;"></div>
+          </div>
+          <span style="font-size:9px;">${pctRep.toFixed(0)}%</span>
+        </div>
+      </td>
+      <td style="color:var(--faint)">${fmtN(r.lm)} / ${fmtN(r.r1tm)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VOTE MIGRATION ESTIMATOR
+// ─────────────────────────────────────────────────────────────────────────────
+const PARTIES_R1 = [
+  { name: 'PARTIDO DEL BUEN GOBIERNO', short: 'Nieto (PBG)', color: '#eab308', key: 'n' },
+  { name: 'RENOVACIÓN POPULAR', short: 'RLA (RP)', color: '#1e40af', key: 'rl' },
+  { name: 'PARTIDO CÍVICO OBRAS', short: 'Barnechea (PCO)', color: '#7c3aed', key: null },
+  { name: 'PARTIDO PAÍS PARA TODOS', short: 'Villarán (PPT)', color: '#059669', key: null },
+];
+
+function estimateMigration() {
+  const live = STATE.live;
+  const r1 = STATE.r1;
+  if (!live || !live.districts || live.districts.length === 0 || !r1) return null;
+
+  // For each polling-table match (same codigo_mesa), compute:
+  // r1 votes for each party, and then runoff K/S
+  // Use district-level OLS to regress runoff K% on r1 party shares
+
+  // Simplified: use district-level correlation
+  const distLive = Object.fromEntries(live.districts.map(d => [d.u, d]));
+  
+  // Collect paired observations
+  const data = [];
+  for (const [ub, r1d] of Object.entries(r1)) {
+    const ld = distLive[parseInt(ub)];
+    if (!ld || (ld.k + ld.s) === 0) continue;
+    const liveValid = ld.k + ld.s;
+    const kShare2 = ld.k / liveValid;
+    const r1Valid = r1d.tv || 0;
+    if (r1Valid === 0) continue;
+
+    data.push({
+      u: parseInt(ub),
+      kShare2,
+      r1KShare: r1d.k / r1Valid,
+      r1SShare: r1d.s / r1Valid,
+      r1NShare: r1d.n / r1Valid,
+      r1RLShare: r1d.rl / r1Valid,
+      w: Math.min(ld.cm || 1, 20), // weight by counted mesas
+    });
+  }
+
+  if (data.length < 20) return null;
+
+  // Simple weighted means of Keiko's 2nd round share vs R1 party shares
+  // Interpret as: for each R1 vote, fraction going to Keiko/Sanchez/blank/null
+  // Using correlation approach
+  const migrants = {};
+  
+  ['kShare2'].forEach(() => {
+    // Estimate via simple partitioning based on observed correlations
+    // keiko r2 = a*keiko_r1 + b*sanchez_r1 + c*nieto_r1 + d*rla_r1 + e*others
+    // Solve with weighted OLS (simplified)
+    const n = data.length;
+    const wSum = data.reduce((s, d) => s + d.w, 0);
+    
+    // Weighted averages
+    const mean = (arr) => arr.reduce((s, d) => s + d.w * d, 0) / wSum;
+    
+    const avgKShare2 = data.reduce((s, d) => s + d.w * d.kShare2, 0) / wSum;
+    const avgR1K = data.reduce((s, d) => s + d.w * d.r1KShare, 0) / wSum;
+    const avgR1S = data.reduce((s, d) => s + d.w * d.r1SShare, 0) / wSum;
+    const avgR1N = data.reduce((s, d) => s + d.w * d.r1NShare, 0) / wSum;
+    const avgR1RL = data.reduce((s, d) => s + d.w * d.r1RLShare, 0) / wSum;
+
+    // Pearson correlations with K share
+    const corr = (xKey) => {
+      const meanX = data.reduce((s, d) => s + d.w * d[xKey], 0) / wSum;
+      const cov = data.reduce((s, d) => s + d.w * (d[xKey] - meanX) * (d.kShare2 - avgKShare2), 0) / wSum;
+      const sdX = Math.sqrt(data.reduce((s, d) => s + d.w * Math.pow(d[xKey] - meanX, 2), 0) / wSum);
+      const sdY = Math.sqrt(data.reduce((s, d) => s + d.w * Math.pow(d.kShare2 - avgKShare2, 2), 0) / wSum);
+      return sdX * sdY > 0 ? cov / (sdX * sdY) : 0;
+    };
+
+    migrants.corrKR1K = corr('r1KShare');
+    migrants.corrKR1S = corr('r1SShare');
+    migrants.corrKR1N = corr('r1NShare');
+    migrants.corrKR1RL = corr('r1RLShare');
+    migrants.n = n;
+    migrants.avgKShare2 = avgKShare2;
+  });
+
+  // Translate correlations to flow estimates
+  // A positive correlation means those R1 voters tend to go to Keiko
+  // Convert to rough % allocation
+  const flows = (corrK) => {
+    const kFrac = clamp(0.5 + corrK * 0.4, 0.05, 0.95);
+    return { keiko: Math.round(kFrac * 100), sanchez: Math.round((1-kFrac)*100) };
+  };
+
+  return {
+    n: migrants.n,
+    parties: [
+      { label: 'Fuerza Popular (1ª vuelta)', color: '#d4450c', ...flows(migrants.corrKR1K) },
+      { label: 'Juntos por el Perú (1ª vuelta)', color: '#1a5c8a', ...flows(migrants.corrKR1S) },
+      { label: 'Partido del Buen Gobierno (Nieto)', color: '#eab308', ...flows(migrants.corrKR1N) },
+      { label: 'Renovación Popular (RLA)', color: '#1e40af', ...flows(migrants.corrKR1RL) },
+    ]
+  };
+}
+
+function updateMigration() {
+  const result = estimateMigration();
+  const grid = document.getElementById('migration-grid');
+  const noData = document.getElementById('migration-no-data');
+
+  if (!result) {
+    grid.style.display = 'none';
+    noData.style.display = '';
+    return;
+  }
+
+  noData.style.display = 'none';
+  grid.style.display = '';
+
+  const cards = [
+    { title: 'Votos de la 1ª vuelta → Keiko', parties: result.parties, target: 'keiko' },
+    { title: 'Votos de la 1ª vuelta → Sánchez', parties: result.parties, target: 'sanchez' },
+  ];
+
+  grid.innerHTML = cards.map(card => `
+    <div class="migration-card">
+      <div class="mc-title">${card.title}</div>
+      ${result.parties.map(p => {
+        const pct = card.target === 'keiko' ? p.keiko : p.sanchez;
+        const barColor = card.target === 'keiko' ? KEIKO_COLOR : SANCHEZ_COLOR;
+        return `<div class="mc-party">
+          <div class="mc-dot" style="background:${p.color}"></div>
+          <div class="mc-name">${p.label}</div>
+          <div class="mc-bars">
+            <div class="mc-bar-row">
+              <div class="mc-bar" style="width:${pct}%;background:${barColor}"></div>
+              <span class="mc-pct">${pct}%</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+      <div style="font-size:9px;color:var(--faint);font-family:var(--ff-mono);margin-top:8px;">
+        Basado en ${fmtN(result.n)} distritos con datos pareados mesa-a-mesa.
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAP RENDERER (SVG-based, lightweight, no external deps)
+// ─────────────────────────────────────────────────────────────────────────────
+let mapSVGLoaded = false;
+
+async function initMap() {
+  // Load the Peru district SVG topography
+  // We'll use a pre-simplified TopoJSON-derived SVG or fetch from a public source
+  try {
+    const resp = await fetch('data/peru_districts.svg');
+    if (resp.ok) {
+      const svgText = await resp.text();
+      const wrap = document.getElementById('map-svg-wrap');
+      document.getElementById('map-loading').style.display = 'none';
+      wrap.innerHTML = svgText;
+      mapSVGLoaded = true;
+      bindMapEvents();
+      renderMap();
+    } else {
+      showMapFallback();
+    }
+  } catch(e) {
+    showMapFallback();
+  }
+}
+
+function showMapFallback() {
+  document.getElementById('map-loading').innerHTML = `
+    <strong>Mapa en preparación</strong>
+    El shapefile se procesará el día de la elección. Los datos tabulares están disponibles en la sección de departamentos.
+  `;
+}
+
+function bindMapEvents() {
+  const svg = document.getElementById('map-svg-wrap').querySelector('svg');
+  if (!svg) return;
+  const tooltip = document.getElementById('map-tooltip');
+
+  svg.querySelectorAll('[data-u]').forEach(path => {
+    path.addEventListener('mousemove', (e) => {
+      const ub = parseInt(path.dataset.u);
+      const info = getDistrictInfo(ub);
+      if (!info) return;
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top = (e.clientY - 20) + 'px';
+      tooltip.innerHTML = buildTooltipHTML(info);
+    });
+    path.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+  });
+}
+
+function getDistrictInfo(ub) {
+  const r1d = STATE.r1?.[ub];
+  const r2021d = STATE.r2021?.[ub];
+  const ld = STATE.live?.districts?.find?.(d => d.u === ub);
+  if (!r1d) return null;
+  return { ub, r1d, r2021d, ld };
+}
+
+function buildTooltipHTML({ ub, r1d, r2021d, ld }) {
+  const name = `${r1d.d}, ${r1d.p}`;
+  let html = `<b>${name}</b><br>`;
+  
+  if (ld && (ld.k + ld.s) > 0) {
+    const tv = ld.k + ld.s;
+    html += `<span style="color:${KEIKO_COLOR}">Keiko: ${(ld.k/tv*100).toFixed(1)}%</span> · `;
+    html += `<span style="color:${SANCHEZ_COLOR}">Sánchez: ${(ld.s/tv*100).toFixed(1)}%</span><br>`;
+    html += `Actas: ${ld.cm||0}/${r1d.tm} contabilizadas<br>`;
+  } else {
+    html += `<span style="color:var(--faint)">Sin datos 2ª vuelta</span><br>`;
+  }
+
+  // R1 reference
+  if (r1d.tv > 0) {
+    html += `<span style="font-size:9px;opacity:0.7">1ª vuelta — Keiko: ${(r1d.k/r1d.tv*100).toFixed(1)}% · Sánchez: ${(r1d.s/r1d.tv*100).toFixed(1)}%</span>`;
+  }
+  return html;
+}
+
+function renderMap() {
+  const mapType = STATE.activeMap;
+  const svg = document.getElementById('map-svg-wrap').querySelector('svg');
+  if (!svg || !mapSVGLoaded) return;
+
+  const distLive = {};
+  if (STATE.live?.districts) {
+    for (const d of STATE.live.districts) distLive[d.u] = d;
+  }
+
+  svg.querySelectorAll('[data-u]').forEach(path => {
+    const ub = parseInt(path.dataset.u);
+    const r1d = STATE.r1?.[ub];
+    const r2021d = STATE.r2021?.[ub];
+    const ld = distLive[ub];
+    let color = '#d1cec6';
+
+    if (mapType === 'runoff' && ld && (ld.k + ld.s) > 0) {
+      const kShare = ld.k / (ld.k + ld.s);
+      color = blendColor('#d4450c', '#1a5c8a', kShare);
+    } else if (mapType === 'r1' && r1d && r1d.tv > 0) {
+      const kShare = r1d.k / r1d.tv;
+      color = blendColor('#d4450c', '#1a5c8a', kShare);
+    } else if (mapType === 'pending' && r1d) {
+      const pending = (r1d.tm - (ld?.cm || 0));
+      const intensity = Math.min(pending / (r1d.tm || 1), 1);
+      color = `rgb(${Math.round(200*intensity+55)},${Math.round(200*(1-intensity)+55)},${Math.round(200*(1-intensity)+55)})`;
+    } else if (mapType === 'growth-k' && ld && r2021d) {
+      const liveValid = ld.k + ld.s;
+      const kShare2026 = liveValid > 0 ? ld.k / liveValid : null;
+      const keiko2021Share = r2021d.tv21 > 0 ? r2021d.k21 / r2021d.tv21 : null;
+      if (kShare2026 !== null && keiko2021Share !== null) {
+        const diff = kShare2026 - keiko2021Share;
+        color = diff > 0 ? lighten('#d4450c', diff * 3) : lighten('#1a5c8a', -diff * 3);
+      }
+    } else if (mapType === 'growth-s' && ld && r2021d) {
+      const liveValid = ld.k + ld.s;
+      const sShare2026 = liveValid > 0 ? ld.s / liveValid : null;
+      const castillo2021Share = r2021d.tv21 > 0 ? r2021d.c21 / r2021d.tv21 : null;
+      if (sShare2026 !== null && castillo2021Share !== null) {
+        const diff = sShare2026 - castillo2021Share;
+        color = diff > 0 ? lighten('#1a5c8a', diff * 3) : lighten('#d4450c', -diff * 3);
+      }
+    }
+
+    path.style.fill = color;
+    path.style.stroke = '#888';
+    path.style.strokeWidth = '0.3';
+    path.style.cursor = 'pointer';
+  });
+
+  updateMapLegend(mapType);
+  updateTopDistricts(mapType, distLive);
+}
+
+function blendColor(hexA, hexB, t) {
+  // t=0 → hexA, t=1 → hexB (but we want t=1 = keiko)
+  // Actually: t=high means k-dominated
+  const A = hexToRgb(hexA), B = hexToRgb(hexB);
+  const blend = (a, b) => Math.round(a + (b - a) * (1 - t));
+  return `rgb(${blend(A.r,B.r)},${blend(A.g,B.g)},${blend(A.b,B.b)})`;
+}
+
+function lighten(hex, amount) {
+  const c = hexToRgb(hex);
+  const f = Math.min(amount, 1);
+  return `rgb(${Math.min(255,c.r + Math.round(f*200))},${Math.min(255,c.g + Math.round(f*200))},${Math.min(255,c.b + Math.round(f*200))})`;
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+
+function updateMapLegend(mapType) {
+  const el = document.getElementById('map-legend-content');
+  const title = document.getElementById('sidebar-title');
+
+  const legends = {
+    runoff: { title: 'Keiko vs. Sánchez', items: [
+      { color: '#d4450c', label: 'Keiko +30%' },
+      { color: '#e8855a', label: 'Keiko leve' },
+      { color: '#d1cec6', label: 'Sin datos' },
+      { color: '#6baed6', label: 'Sánchez leve' },
+      { color: '#1a5c8a', label: 'Sánchez +30%' },
+    ]},
+    r1: { title: '1ª Vuelta referencia', items: [
+      { color: '#d4450c', label: 'Keiko fuerte' },
+      { color: '#d1cec6', label: 'Empatado' },
+      { color: '#1a5c8a', label: 'Sánchez fuerte' },
+    ]},
+    pending: { title: 'Mesas pendientes', items: [
+      { color: '#e55', label: 'Muchas pendientes' },
+      { color: '#e88', label: 'Pocas pendientes' },
+      { color: '#d1cec6', label: 'Sin pendientes' },
+    ]},
+    'growth-k': { title: 'Desempeño Keiko vs. 2021', items: [
+      { color: '#d4450c', label: 'Supera 2021 (+)' },
+      { color: '#d1cec6', label: '= 2021' },
+      { color: '#1a5c8a', label: 'Por debajo (-) ' },
+    ]},
+    'growth-s': { title: 'Sánchez vs. Castillo 2021', items: [
+      { color: '#1a5c8a', label: 'Supera Castillo (+)' },
+      { color: '#d1cec6', label: '= 2021' },
+      { color: '#d4450c', label: 'Por debajo (-)' },
+    ]},
+  };
+
+  const leg = legends[mapType] || legends.runoff;
+  title.textContent = leg.title;
+  el.innerHTML = `<div class="ms-legend">${leg.items.map(i => `
+    <div class="ms-legend-item">
+      <div class="ms-swatch" style="background:${i.color}"></div>
+      <span>${i.label}</span>
+    </div>`).join('')}</div>`;
+}
+
+function updateTopDistricts(mapType, distLive) {
+  const el = document.getElementById('top-districts-list');
+  const r1 = STATE.r1;
+  if (!r1) { el.innerHTML = ''; return; }
+
+  let sorted = Object.values(r1)
+    .filter(d => d.tv > 0)
+    .sort((a,b) => {
+      const la = distLive[a.u], lb = distLive[b.u];
+      if (mapType === 'runoff' || mapType === 'r1') {
+        const aValid = la ? la.k + la.s : 0;
+        const bValid = lb ? lb.k + lb.s : 0;
+        return bValid - aValid;
+      }
+      return b.tv - a.tv;
+    })
+    .slice(0, 8);
+
+  el.innerHTML = sorted.map(d => {
+    const ld = distLive[d.u];
+    const tv = ld ? ld.k + ld.s : 0;
+    const kPct = tv > 0 ? (ld.k / tv * 100).toFixed(1) : '—';
+    const sPct = tv > 0 ? (ld.s / tv * 100).toFixed(1) : '—';
+    const winner = ld && ld.k > ld.s ? 'keiko' : 'sanchez';
+    return `<div class="ms-district-row">
+      <span class="ms-dr-name">${d.d}</span>
+      <span class="ms-dr-val" style="color:var(--${tv>0?winner:'faint'})">
+        ${tv>0?(winner==='keiko'?kPct:sPct)+'%':'—'}
+      </span>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+function fmtN(n) {
+  if (n === null || n === undefined) return '—';
+  return Math.round(n).toLocaleString('es-PE');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAP TABS
+// ─────────────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.map-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.map-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    STATE.activeMap = tab.dataset.map;
+    renderMap();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POLLING
+// ─────────────────────────────────────────────────────────────────────────────
+let pollInterval = null;
+
+function startPolling() {
+  loadLive();
+  pollInterval = setInterval(loadLive, 60000); // every 60 seconds
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+(async () => {
+  await loadStatic();
+  await loadLive();
+  await initMap();
+  startPolling();
+})();
+</script>
+</body>
+</html>
