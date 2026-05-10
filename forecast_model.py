@@ -254,6 +254,16 @@ prov_r2_mean = df_cnt_valid.groupby('prov')['r2_sh'].agg(['mean','count','std'])
 dept_r2_mean = df_cnt_valid.groupby('dept')['r2_sh'].agg(['mean','count','std'])
 nat_r2_mean  = float(df_cnt_valid['r2_sh'].mean()) if len(df_cnt_valid) > 0 else k21_nat
 
+# National swing: how much has Keiko shifted vs 2021 in counted areas?
+# This is the key anchor — adjust 2021 prior by this swing for all predictions
+k21_cnt_mean = float(df_cnt_valid['k21_sh'].mean()) if len(df_cnt_valid) > 0 else k21_nat
+nat_swing = nat_r2_mean - k21_cnt_mean  # e.g. -0.03 means Keiko down 3pp vs 2021
+# Shrink swing toward 0 when few tables counted (uncertain estimate)
+n_cnt_tables = len(df_cnt_valid)
+swing_confidence = min(1.0, n_cnt_tables / 5000.0)  # full confidence at 5000+ tables
+nat_swing_adj = nat_swing * swing_confidence
+print(f"  National swing vs 2021: {nat_swing:+.4f} (adj: {nat_swing_adj:+.4f}, confidence: {swing_confidence:.2f})")
+
 print(f"  Dept models: {len(dept_models)}  Prov models: {len(prov_models)}  "
       f"Dist models: {len(dist_models)}")
 
@@ -273,24 +283,15 @@ for _, row in df_unc.iterrows():
     avg_vv_t = float(row['avg_vv'])
 
     # --- PREDICTION HIERARCHY ---
-    # Level 1: district has R2 data — shrink toward 2021 prior based on n counted
+    # Level 1: district has R2 data — use district mean directly
     if dist_id in dist_models:
-        dm  = dist_models[dist_id]
-        cm  = dm['cm']
-        mu_r2 = dm['r2_mean']   # district R2 mean from counted tables
-        # 2021 prior for this district
-        k21_t = float(row.get('k21_sh', k21_nat))
-        # Shrinkage: trust R2 mean proportionally to how many tables are counted
-        # At cm=1: weight ~0.15 on R2, ~0.85 on 2021
-        # At cm=10: weight ~0.6 on R2, ~0.4 on 2021
-        # At cm=44 (full district): weight ~0.95 on R2
-        shrink_weight = cm / (cm + 8.0)   # 8 = TAU prior virtual observations
-        mu_base = shrink_weight * mu_r2 + (1 - shrink_weight) * k21_t
-        # R1 OLS correction
+        dm     = dist_models[dist_id]
+        cm     = dm['cm']
+        mu_base = dm['r2_mean']
         if dm['beta'] is not None:
             mu_ols = predict_r2(row, dm['beta'])
             r2_d   = dm['r2']
-            mu     = mu_base + (mu_ols - mu_base) * r2_d * shrink_weight
+            mu     = mu_base + (mu_ols - mu_base) * r2_d
         else:
             mu     = mu_base
             r2_d   = 0.0
@@ -303,16 +304,12 @@ for _, row in df_unc.iterrows():
     # Level 2: province has R2 data
     elif prov_id in prov_r2_mean.index:
         pr      = prov_r2_mean.loc[prov_id]
-        n_prov  = int(pr['count'])
-        mu_r2   = float(pr['mean'])
-        k21_t   = float(row.get('k21_sh', k21_nat))
-        shrink_weight = n_prov / (n_prov + 15.0)   # stronger prior at province level
-        mu_base = shrink_weight * mu_r2 + (1 - shrink_weight) * k21_t
+        mu_base = float(pr['mean'])
         if prov_id in prov_models and prov_models[prov_id]['beta'] is not None:
             pm     = prov_models[prov_id]
             mu_ols = predict_r2(row, pm['beta'])
             r2_p   = pm['r2']
-            mu     = mu_base + (mu_ols - mu_base) * r2_p * shrink_weight
+            mu     = mu_base + (mu_ols - mu_base) * r2_p
         else:
             mu     = mu_base
             r2_p   = 0.0
@@ -323,16 +320,12 @@ for _, row in df_unc.iterrows():
     # Level 3: department has R2 data
     elif dept_id in dept_r2_mean.index:
         dr     = dept_r2_mean.loc[dept_id]
-        n_dept = int(dr['count'])
-        mu_r2  = float(dr['mean'])
-        k21_t  = float(row.get('k21_sh', k21_nat))
-        shrink_weight = n_dept / (n_dept + 30.0)   # even stronger prior at dept
-        mu_base = shrink_weight * mu_r2 + (1 - shrink_weight) * k21_t
+        mu_base = float(dr['mean'])
         if dept_id in dept_models and dept_models[dept_id]['beta'] is not None:
             dm2    = dept_models[dept_id]
             mu_ols = predict_r2(row, dm2['beta'])
             r2_k   = dm2['r2']
-            mu     = mu_base + (mu_ols - mu_base) * r2_k * shrink_weight
+            mu     = mu_base + (mu_ols - mu_base) * r2_k
         else:
             mu     = mu_base
             r2_k   = 0.0
@@ -342,7 +335,7 @@ for _, row in df_unc.iterrows():
 
     # Level 4: R1 national model + 2021 anchor
     else:
-        k21_t = float(row.get('k21_sh', k21_nat))
+        k21_t = float(np.clip(row.get('k21_sh', k21_nat) + nat_swing_adj, 0.02, 0.98))
         if beta_nat is not None:
             mu_ols = predict_r2(row, beta_nat)
             # Blend 2021 prior and OLS (2021 weighted by TAU, OLS by R² strength)
