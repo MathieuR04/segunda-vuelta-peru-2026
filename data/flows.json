@@ -1,6 +1,6 @@
 {
   "meta": {
-    "timestamp": "09/05/2026 20:36",
+    "timestamp": "09/05/2026 20:38",
     "n_tables": 70890,
     "n_districts": 1278,
     "method": "table_level_OLS",
