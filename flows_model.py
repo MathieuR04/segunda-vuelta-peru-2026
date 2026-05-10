@@ -67,20 +67,45 @@ for p in SOURCE_PARTIES:
 
 tv_r1 = (res[~res['partido_codigo'].isin(['80','81','82'])]
     .groupby('codigo_mesa')['votos'].sum().reset_index(name='tv_r1'))
+# Also get blancos and nulos from R1 (control regressors)
+bl_r1 = (res[res['partido_codigo']=='80']
+    .groupby('codigo_mesa')['votos'].sum().reset_index(name='bl_r1'))
+nu_r1 = (res[res['partido_codigo']=='81']
+    .groupby('codigo_mesa')['votos'].sum().reset_index(name='nu_r1'))
 r1w = r1w.merge(tv_r1, on='codigo_mesa', how='left')
-r1w['tv_r1'] = r1w['tv_r1'].fillna(0)
+r1w = r1w.merge(bl_r1, on='codigo_mesa', how='left')
+r1w = r1w.merge(nu_r1, on='codigo_mesa', how='left')
+r1w['tv_r1']  = r1w['tv_r1'].fillna(0)
+r1w['bl_r1']  = r1w['bl_r1'].fillna(0)
+r1w['nu_r1']  = r1w['nu_r1'].fillna(0)
 
 df = meta.merge(r1w, on='codigo_mesa', how='left')
 for p in SOURCE_PARTIES:
     if p not in df.columns: df[p] = 0
     df[p] = df[p].fillna(0)
-df['tv_r1'] = df['tv_r1'].fillna(0)
+df['tv_r1']  = df['tv_r1'].fillna(0)
+df['bl_r1']  = df['bl_r1'].fillna(0)
+df['nu_r1']  = df['nu_r1'].fillna(0)
 df = df[df['tv_r1'] > 0].copy()
 
-# R1 party shares — regressors
+# Total emitidos R1 (valid + blancos + nulos, excl impugnados)
+df['ta_r1'] = df['tv_r1'] + df['bl_r1'] + df['nu_r1']
+
+# R1 party shares of valid votes (the 7 main parties — for display)
 SOURCES = [f'{p}_sh' for p in SOURCE_PARTIES]
 for p in SOURCE_PARTIES:
-    df[f'{p}_sh'] = df[p] / df['tv_r1']
+    df[f'{p}_sh'] = df[p] / df['tv_r1'].clip(lower=1)
+
+# Additional control regressors: R1 blancos, nulos, abstention, other minor parties
+# "other" = valid votes not accounted for by the 7 main parties
+df['other_r1'] = np.clip(df['tv_r1'] - sum(df[p] for p in SOURCE_PARTIES), 0, None)
+df['bl_r1_sh']    = df['bl_r1']    / df['ta_r1'].clip(lower=1)
+df['nu_r1_sh']    = df['nu_r1']    / df['ta_r1'].clip(lower=1)
+df['other_r1_sh'] = df['other_r1'] / df['tv_r1'].clip(lower=1)
+df['abs_r1_sh']   = np.clip(1 - df['ta_r1'] / df['electores'].clip(lower=1), 0, 1)
+
+# All regressors: 7 main + 4 controls (blancos, nulos, other, abstention)
+SOURCES_ALL = SOURCES + ['bl_r1_sh', 'nu_r1_sh', 'other_r1_sh', 'abs_r1_sh']
 
 print(f"  Total tables with R1 data: {len(df):,}")
 
@@ -158,7 +183,7 @@ print(f"  Districts covered: {df['dist'].nunique():,}")
 # ── Table-level OLS ───────────────────────────────────────────────────────────
 print("[3/4] Fitting table-level OLS...")
 
-X = np.column_stack([np.ones(len(df))] + [df[s].values for s in SOURCES])
+X = np.column_stack([np.ones(len(df))] + [df[s].values for s in SOURCES_ALL])
 w = df['w'].values
 
 def wls(X, y, w):
@@ -190,6 +215,19 @@ for b in range(N_BOOTSTRAP):
         print(f"  Bootstrap: {b+1}/{N_BOOTSTRAP}")
 
 # ── Extract flows via counterfactual prediction ───────────────────────────────
+# For party s (among top 7): predict when that party has 100% of R1 valid votes,
+# all other top-7 parties = 0, controls (blancos, nulos, other, abstention) = their means.
+# Position of party s in X is i+1 (after intercept).
+# Control columns are at positions len(SOURCE_PARTIES)+1 .. len(SOURCES_ALL).
+
+n_main = len(SOURCE_PARTIES)
+n_feats = X.shape[1]  # 1 + len(SOURCES_ALL)
+
+# Mean values of control regressors (to hold fixed in counterfactual)
+ctrl_means = {s: float(df[s].mean()) for s in ['bl_r1_sh','nu_r1_sh','other_r1_sh','abs_r1_sh']}
+ctrl_idx = {s: n_main + 1 + j for j, s in enumerate(['bl_r1_sh','nu_r1_sh','other_r1_sh','abs_r1_sh'])}
+
+# ── Extract flows via counterfactual prediction ───────────────────────────────
 # For party s: what does the model predict when a table has 100% of votes for s?
 # x_s = [1, 0, ..., 1, ..., 0] (intercept=1, party s = 1, others = 0)
 # This gives interpretable flows: "if all R1 votes in a table were for party s,
@@ -204,10 +242,12 @@ flows_out = []
 for i, party in enumerate(SOURCE_PARTIES):
     row = {'party': party, 'name': PARTY_NAMES[party], 'color': PARTY_COLORS[party]}
 
-    # Counterfactual: this party has 100% of R1 votes
+    # Counterfactual: party s = 1, all other top-7 = 0, controls at their means
     x_party = x_base.copy(); x_party[i + 1] = 1.0
+    # Set controls to their mean values
+    for s, idx_c in ctrl_idx.items():
+        x_party[idx_c] = ctrl_means[s]
 
-    # Predicted share for each destination
     pred = np.array([float(x_party @ main_coefs[dest]) for dest in DESTS])
     pred = np.clip(pred, 0, 1)
     total = pred.sum()
@@ -215,7 +255,6 @@ for i, party in enumerate(SOURCE_PARTIES):
 
     for j, (dest, label) in enumerate(zip(DESTS, DEST_LABELS)):
         row[f'to_{label}'] = round(float(flows[j]), 4)
-        # Bootstrap CI on the counterfactual prediction
         boot_preds = [float(x_party @ boot[dest][b]) for b in range(N_BOOTSTRAP)]
         row[f'ci_{label}_lo'] = round(float(np.percentile(boot_preds, 5)), 4)
         row[f'ci_{label}_hi'] = round(float(np.percentile(boot_preds, 95)), 4)
