@@ -273,20 +273,27 @@ for _, row in df_unc.iterrows():
     avg_vv_t = float(row['avg_vv'])
 
     # --- PREDICTION HIERARCHY ---
-    # Level 1: district has R2 data
+    # Level 1: district has R2 data — shrink toward 2021 prior based on n counted
     if dist_id in dist_models:
         dm  = dist_models[dist_id]
-        cm  = dm['cm']                         # counted tables in district
-        mu_base = dm['r2_mean']                # district R2 mean
-        # R1 OLS correction within district
+        cm  = dm['cm']
+        mu_r2 = dm['r2_mean']   # district R2 mean from counted tables
+        # 2021 prior for this district
+        k21_t = float(row.get('k21_sh', k21_nat))
+        # Shrinkage: trust R2 mean proportionally to how many tables are counted
+        # At cm=1: weight ~0.15 on R2, ~0.85 on 2021
+        # At cm=10: weight ~0.6 on R2, ~0.4 on 2021
+        # At cm=44 (full district): weight ~0.95 on R2
+        shrink_weight = cm / (cm + 8.0)   # 8 = TAU prior virtual observations
+        mu_base = shrink_weight * mu_r2 + (1 - shrink_weight) * k21_t
+        # R1 OLS correction
         if dm['beta'] is not None:
             mu_ols = predict_r2(row, dm['beta'])
             r2_d   = dm['r2']
-            mu     = mu_base + (mu_ols - mu_base) * r2_d   # blend toward OLS
+            mu     = mu_base + (mu_ols - mu_base) * r2_d * shrink_weight
         else:
             mu     = mu_base
             r2_d   = 0.0
-        # σ: within-district variation, reduced by R1 R², plus uncertainty in district mean
         sigma_within = SIGMA_WITHIN['district'] * math.sqrt(1 - r2_d * 0.5)
         sigma_mean   = SIGMA_WITHIN['district'] / math.sqrt(max(cm, 1))
         sigma_sh     = math.sqrt(sigma_within**2 + sigma_mean**2)
@@ -295,30 +302,37 @@ for _, row in df_unc.iterrows():
 
     # Level 2: province has R2 data
     elif prov_id in prov_r2_mean.index:
-        pr     = prov_r2_mean.loc[prov_id]
-        n_prov = int(pr['count'])
-        mu_base = float(pr['mean'])
+        pr      = prov_r2_mean.loc[prov_id]
+        n_prov  = int(pr['count'])
+        mu_r2   = float(pr['mean'])
+        k21_t   = float(row.get('k21_sh', k21_nat))
+        shrink_weight = n_prov / (n_prov + 15.0)   # stronger prior at province level
+        mu_base = shrink_weight * mu_r2 + (1 - shrink_weight) * k21_t
         if prov_id in prov_models and prov_models[prov_id]['beta'] is not None:
-            pm      = prov_models[prov_id]
-            mu_ols  = predict_r2(row, pm['beta'])
-            r2_p    = pm['r2']
-            mu      = mu_base + (mu_ols - mu_base) * r2_p
+            pm     = prov_models[prov_id]
+            mu_ols = predict_r2(row, pm['beta'])
+            r2_p   = pm['r2']
+            mu     = mu_base + (mu_ols - mu_base) * r2_p * shrink_weight
         else:
-            mu      = mu_base
-            r2_p    = 0.0
-        sigma_sh = SIGMA_WITHIN['province'] * math.sqrt(1 - r2_p * 0.5)
+            mu     = mu_base
+            r2_p   = 0.0
+        sigma_sh  = SIGMA_WITHIN['province'] * math.sqrt(1 - r2_p * 0.5)
         group_key = ('prov', prov_id)
         level     = 'province'
 
     # Level 3: department has R2 data
     elif dept_id in dept_r2_mean.index:
         dr     = dept_r2_mean.loc[dept_id]
-        mu_base = float(dr['mean'])
+        n_dept = int(dr['count'])
+        mu_r2  = float(dr['mean'])
+        k21_t  = float(row.get('k21_sh', k21_nat))
+        shrink_weight = n_dept / (n_dept + 30.0)   # even stronger prior at dept
+        mu_base = shrink_weight * mu_r2 + (1 - shrink_weight) * k21_t
         if dept_id in dept_models and dept_models[dept_id]['beta'] is not None:
             dm2    = dept_models[dept_id]
             mu_ols = predict_r2(row, dm2['beta'])
             r2_k   = dm2['r2']
-            mu     = mu_base + (mu_ols - mu_base) * r2_k
+            mu     = mu_base + (mu_ols - mu_base) * r2_k * shrink_weight
         else:
             mu     = mu_base
             r2_k   = 0.0
