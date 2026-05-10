@@ -1,537 +1,506 @@
 """
-forecast_model.py
-=================
-Hierarchical Bayesian forecast for the 2026 Peruvian presidential runoff.
+forecast_model.py — Segunda Vuelta Perú 2026
+=============================================
+Bottom-up table-level forecast.
 
-DATA INPUTS (all at polling-table level where possible):
-  data/live_raw.parquet          — R2 2026 live results (one row per counted table)
-  data/mesas_metadata.parquet    — all 92,766 tables with ubigeo hierarchy
-  data/actas_resultados.parquet  — R1 2026 results per table × party
-  data/Peruvian_Presidential_Election_Second_Round.csv — R2 2021 table-level
+SIGMA LOGIC (the key insight):
+  At 7.6% reporting, 85,680 tables are uncounted.
+  Even with perfect per-table predictions, errors accumulate.
+  ±1 vote/table × 85,680 tables = ±85,680 vote floor.
+  Realistic within-district prediction error is ~6 votes/table.
+  sqrt(85680) × 6 = ±1,756 votes if all errors are INDEPENDENT.
+  But errors are CORRELATED within districts/provinces/depts —
+  all tables in an unreported district share the same prediction error.
+  This correlation is what drives realistic uncertainty.
 
-OUTPUT:
-  data/forecast.json
+SIGMA CALIBRATION from 2021 within-group table-level std of Keiko share:
+  Within polling place:  σ = 0.035 → ~4.6 votes/table
+  Within district:       σ = 0.047 → ~6.2 votes/table
+  Within province:       σ = 0.083 → ~10.8 votes/table
+  Within department:     σ = 0.116 → ~15.1 votes/table
+  National:              σ = 0.217 → ~28.1 votes/table
 
-MODEL ARCHITECTURE:
-  For each uncounted table t in district d, province p, department k:
+  R1 OLS reduces σ by sqrt(1-R²) at each level.
+  Correlated component (all tables in same unobserved group share same error):
+    Var_correlated = n_groups × (avg_tables_per_group × avg_vv × σ_group_mean)²
+  where σ_group_mean = σ_within_group / sqrt(n_counted_in_group)
 
-  Step 1 — Build feature vector from R1 2026 (table-level):
-    X(t) = [fp_sh, jpp_sh, rla_sh, nieto_sh, obras_sh, ppt_sh, an_sh,
-             blancos_r1_sh, nulos_r1_sh, keiko_21_sh (if available)]
+PREDICTION HIERARCHY for each uncounted table t:
+  1. Same district has R2 data (live.json) → use district R2 mean + R1 correction
+  2. Same province has R2 data → province R2 mean + R1 correction
+  3. Same department has R2 data → dept R2 mean + R1 correction
+  4. 2021 table-level result + national/dept swing → fallback
+  5. National mean → last resort
 
-  Step 2 — Fit national OLS on counted tables:
-    keiko_r2_sh(t) ~ X(t)·β_nat + ε_nat
-
-  Step 3 — Compute within-district residuals for counted tables.
-    For each geographic level (dist, prov, dept), compute:
-      mean_residual_level: average systematic deviation from national model
-      n_level:             number of counted tables at that level
-      σ_level:             residual std at that level
-
-  Step 4 — Bayesian prediction for each uncounted table via precision weighting:
-    The prediction at each level is:
-      μ_dist = national_pred + dist_residual   (if n_dist >= MIN_DIST_N)
-      μ_prov = national_pred + prov_residual   (if n_prov >= MIN_PROV_N)
-      μ_dept = national_pred + dept_residual
-
-    Combine via precision weighting (inverse variance):
-      precision_dist = n_dist / σ²_dist (if available, else 0)
-      precision_prov = n_prov / σ²_prov
-      precision_dept = n_dept / σ²_dept
-      precision_nat  = n_national / σ²_nat / K  (K downweights national)
-      precision_2021 = τ_2021 / σ²_2021  (Bayesian prior from 2021)
-
-      μ_final = weighted_mean(μ_dist, μ_prov, μ_dept, μ_nat, μ_2021,
-                              weights=[prec_dist, prec_prov, prec_dept, prec_nat, prec_2021])
-
-  Step 5 — Uncertainty for each uncounted table:
-      σ²_pred(t) = 1 / Σ(precisions)        # posterior variance
-                 + σ²_residual_nat           # irreducible model error
-    This σ grows when: few local counted tables, district differs from province,
-    geography not covered in 2021 data.
-
-  Step 6 — Monte Carlo (N_SIMS=10,000):
-    For each simulation:
-      - Draw keiko_r2_sh(t) ~ N(μ_final(t), σ²_pred(t)) for all uncounted t
-      - Clip to [0,1], multiply by imputed valid votes → votes
-      - Sum with current counted votes → simulated national margin
-    → Distribution of 10,000 final margins → 95% CI, win probabilities
-
-UBIGEO HIERARCHY (using integer codes, not names — avoids duplicate district names):
-  Department: id_ubigeo // 10000        (e.g. 15 = Lima)
-  Province:   id_ubigeo // 100          (e.g. 1501 = Lima province)
-  District:   id_ubigeo                 (e.g. 150101 = Lima district)
-
-REQUIREMENTS:
-  pip install pandas pyarrow numpy scipy
+NEVER use mesas_metadata.codigo_estado_acta for R2 counted/uncounted split.
+All ubigeo joins: integer id_ubigeo (ONPE system), not district names.
 """
 
-import json, datetime, warnings
+import json, datetime, warnings, unicodedata, math
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 from pathlib import Path
-from scipy import stats
 
 warnings.filterwarnings('ignore')
+np.random.seed(42)
 
 DATA   = Path('data')
 N_SIMS = 10_000
-SEED   = 42
-np.random.seed(SEED)
 
-# Bayesian prior strength from 2021 (equivalent number of virtual tables)
-TAU_2021 = 8.0
-# Minimum tables in a district to trust district-level residual
-MIN_DIST_N = 3
-MIN_PROV_N = 5
-
-# Party codes → feature names
-KEY_PARTIES = {
-    '00000008': 'fp',
-    '00000010': 'jpp',
-    '00000035': 'rla',
-    '00000016': 'nieto',
-    '00000014': 'obras',
-    '00000023': 'ppt',
-    '00000002': 'an',
-    '80':        'bl_r1',
-    '81':        'nu_r1',
+# Calibrated σ within each geographic level from 2021 table-level data
+# These are the FLOOR on prediction error — R1 OLS can only improve on them
+SIGMA_WITHIN = {
+    'district': 0.0474,
+    'province': 0.0828,
+    'dept':     0.1161,
+    'national': 0.2165,
 }
-FEAT_COLS = ['fp','jpp','rla','nieto','obras','ppt','an','bl_r1','nu_r1']
+AVG_VV = 130   # avg valid votes per table in R2 (~electores * 0.75 * 0.93)
+
+KEY = {'00000008':'fp','00000010':'jpp','00000035':'rla','00000016':'nieto',
+       '00000014':'obras','00000023':'ppt','00000002':'an'}
+FEATS = [f'{p}_sh' for p in KEY.values()]
+
+def strip(s):
+    if not isinstance(s, str): return ""
+    return ''.join(c for c in unicodedata.normalize("NFD", s)
+                   if unicodedata.category(c) != 'Mn').upper().strip()
+
+def wls(X, y, w):
+    Xw = X * np.sqrt(w)[:,None]
+    yw = y * np.sqrt(w)
+    coef, *_ = np.linalg.lstsq(Xw, yw, rcond=None)
+    return coef
+
+def fit_flow_model(df_sub, feats=FEATS, y='r2_sh', min_n=5):
+    """Fit weighted OLS. Returns (beta, r2) or (None, 0)."""
+    d = df_sub.dropna(subset=[y] + feats)
+    if len(d) < min_n:
+        return None, 0.0
+    X  = np.column_stack([np.ones(len(d))] + [d[f].values for f in feats])
+    yv = d[y].values
+    wv = d['avg_vv'].clip(lower=1).values
+    beta = wls(X, yv, wv)
+    resid = yv - X @ beta
+    r2 = float(1 - np.var(resid) / np.var(yv)) if np.var(yv) > 0 else 0.0
+    return beta, max(r2, 0.0)
+
+def predict_r2(row, beta, feats=FEATS):
+    x = np.array([1.0] + [float(row.get(f, 0)) for f in feats])
+    return float(np.clip(x @ beta, 0.02, 0.98))
 
 print("=" * 60)
 print("FORECAST MODEL — Segunda Vuelta Perú 2026")
 print("=" * 60)
 
-# ── STEP 0: Load metadata ──────────────────────────────────────────────────────
-print("\n[1/6] Loading metadata...")
-meta = pd.read_parquet(
-    DATA / 'mesas_metadata.parquet',
-    columns=['codigo_mesa','id_ubigeo','eleccion','codigo_estado_acta',
-             'codigo_local_votacion','electores_habiles','votos_validos']
-)
+# ── 1. Build id_ubigeo → shp_ubigeo bridge ────────────────────────────────────
+print("\n[1/7] Ubigeo bridge...")
+lu = pd.read_csv(DATA / 'ubigeo_lookup.csv')
+for c in ['region','provincia','distrito']:
+    lu[f'{c[0]}_s'] = lu[c].apply(strip)
+gdf = gpd.read_file(DATA / 'dist.shp')
+for col, field in [('DEPARTAMEN','r_s'),('PROVINCIA','p_s'),('DISTRITO','d_s')]:
+    gdf[field] = gdf[col].apply(strip)
+gdf['shp_ubigeo'] = gdf['UBIGEO'].astype(str).str.zfill(6)
+lu2 = lu.rename(columns={'r_s':'r_s','p_s':'p_s','d_s':'d_s'})
+lu2['r_s'] = lu['region'].apply(strip)
+lu2['p_s'] = lu['provincia'].apply(strip)
+lu2['d_s'] = lu['distrito'].apply(strip)
+bridge = lu2.merge(gdf[['r_s','p_s','d_s','shp_ubigeo']],
+    left_on=['r_s','p_s','d_s'], right_on=['r_s','p_s','d_s'], how='left'
+)[['id_ubigeo','shp_ubigeo']].dropna()
+id2shp = bridge.set_index('id_ubigeo')['shp_ubigeo'].to_dict()
+print(f"  {len(bridge):,} ubigeo pairs bridged")
+
+# ── 2. Load live.json ──────────────────────────────────────────────────────────
+print("[2/7] Loading live.json...")
+live   = json.loads((DATA / 'live.json').read_text())
+lm     = live.get('meta', {})
+n_cnt  = lm.get('counted_mesas', 0)
+pct    = lm.get('pct_reported', 0.0)
+k_live = lm.get('k_votes', 0)
+s_live = lm.get('s_votes', 0)
+vl     = lm.get('valid_votes', k_live + s_live) or 1
+margin = k_live - s_live
+lByU   = {d['u']: d for d in live.get('districts', [])}
+print(f"  Counted: {n_cnt:,} ({pct:.1f}%)  Districts: {len(lByU):,}")
+print(f"  Current margin: {margin:+,}")
+
+# ── 3. Load metadata ───────────────────────────────────────────────────────────
+print("[3/7] Loading metadata + R1 + 2021...")
+meta = pd.read_parquet(DATA / 'mesas_metadata.parquet',
+    columns=['codigo_mesa','id_ubigeo','eleccion','electores_habiles',
+             'votos_validos','codigo_local_votacion'])
 meta = meta[meta['eleccion'] == 'presidencial'].copy()
 meta['id_ubigeo'] = meta['id_ubigeo'].fillna(0).astype(int)
-meta['dept']   = (meta['id_ubigeo'] // 10000).astype(int)
-meta['prov']   = (meta['id_ubigeo'] // 100).astype(int)
-meta['dist']   = meta['id_ubigeo'].astype(int)
-meta['place']  = meta['codigo_local_votacion'].fillna('UNK')
-meta['mesa_int'] = meta['codigo_mesa'].astype(int)
-print(f"  Tables: {len(meta):,}")
+meta['dept']      = (meta['id_ubigeo'] // 10000).astype(int)
+meta['prov']      = (meta['id_ubigeo'] // 100).astype(int)
+meta['dist']      = meta['id_ubigeo'].astype(int)
+meta['place']     = meta['codigo_local_votacion'].fillna('UNK').astype(str)
+meta['mesa_int']  = meta['codigo_mesa'].astype(int)
+meta['shp_ubigeo']= meta['id_ubigeo'].map(id2shp)
+meta['electores'] = meta['electores_habiles'].fillna(295).clip(lower=10)
 
-# ── STEP 1: Load R1 2026 (table level) ────────────────────────────────────────
-print("[2/6] Loading R1 2026 results...")
-res_r1 = pd.read_parquet(
-    DATA / 'actas_resultados.parquet',
-    columns=['codigo_mesa','eleccion','partido_codigo','votos']
-)
-res_r1 = res_r1[res_r1['eleccion'] == 'presidencial'].copy()
-res_r1_key = res_r1[res_r1['partido_codigo'].isin(KEY_PARTIES)].copy()
-res_r1_key['feat'] = res_r1_key['partido_codigo'].map(KEY_PARTIES)
-r1_wide = (res_r1_key
-    .pivot_table(index='codigo_mesa', columns='feat', values='votos', fill_value=0)
-    .reset_index())
-r1_wide.columns.name = None
-for c in FEAT_COLS:
-    if c not in r1_wide.columns:
-        r1_wide[c] = 0
-
-# Total valid (excl blancos/nulos/impugnados) and total emitidos per table
-total_valid_r1 = (res_r1[~res_r1['partido_codigo'].isin(['80','81','82'])]
+# R1 party shares
+res = pd.read_parquet(DATA / 'actas_resultados.parquet',
+    columns=['codigo_mesa','eleccion','partido_codigo','votos'])
+res = res[res['eleccion'] == 'presidencial'].copy()
+res_k = res[res['partido_codigo'].isin(KEY)].copy()
+res_k['feat'] = res_k['partido_codigo'].map(KEY)
+r1w = res_k.pivot_table(index='codigo_mesa', columns='feat',
+    values='votos', fill_value=0).reset_index()
+r1w.columns.name = None
+for p in KEY.values():
+    if p not in r1w.columns: r1w[p] = 0
+tvr1 = (res[~res['partido_codigo'].isin(['80','81','82'])]
     .groupby('codigo_mesa')['votos'].sum().reset_index(name='tv_r1'))
-total_all_r1 = (res_r1.groupby('codigo_mesa')['votos']
-    .sum().reset_index(name='ta_r1'))
+r1w = r1w.merge(tvr1, on='codigo_mesa', how='left')
+r1w['tv_r1'] = r1w['tv_r1'].fillna(0)
 
-r1_wide = r1_wide.merge(total_valid_r1, on='codigo_mesa', how='left')
-r1_wide = r1_wide.merge(total_all_r1,   on='codigo_mesa', how='left')
-r1_wide['tv_r1'] = r1_wide['tv_r1'].fillna(0)
-r1_wide['ta_r1'] = r1_wide['ta_r1'].fillna(0)
-print(f"  R1 tables: {len(r1_wide):,}")
+# 2021 table-level (mesa code = MESA_DE_VOTACION integer)
+df21 = pd.read_csv(DATA / 'Peruvian_Presidential_Election_Second_Round.csv',
+    encoding='latin1', sep=';', index_col=False)
+df21p = df21[df21['TIPO_ELECCION'] == 'PRESIDENCIAL'].copy()
+df21p = df21p[df21p['UBIGEO'].astype(str).str.zfill(6).str[:2].astype(int) <= 25]
+for c in ['VOTOS_P1','VOTOS_P2']:
+    df21p[c] = pd.to_numeric(df21p[c], errors='coerce').fillna(0)
+df21p['mesa_int'] = pd.to_numeric(df21p['MESA_DE_VOTACION'],
+    errors='coerce').fillna(0).astype(int)
+df21p['tv21'] = df21p['VOTOS_P1'] + df21p['VOTOS_P2']
+df21p = df21p[df21p['tv21'] > 0].copy()
+df21p['k21_sh'] = df21p['VOTOS_P2'] / df21p['tv21']
+# District-level 2021
+df21p['id_ubigeo'] = df21p['UBIGEO'].astype(str).str.zfill(6).astype(int)
+d21_dist = df21p.groupby('id_ubigeo').agg(
+    k21_sum=('VOTOS_P2','sum'), tv21_sum=('tv21','sum')).reset_index()
+d21_dist['k21_sh_dist'] = d21_dist['k21_sum'] / d21_dist['tv21_sum']
+k21_nat = float(df21p['VOTOS_P2'].sum() / df21p['tv21'].sum())
+print(f"  2021 national Keiko share: {k21_nat:.4f}")
 
-# ── STEP 2: Load R2 2021 (table level, 93% coverage) ─────────────────────────
-print("[3/6] Loading R2 2021 (table-level anchor)...")
-df21 = pd.read_csv(
-    DATA / 'Peruvian_Presidential_Election_Second_Round.csv',
-    encoding='latin1', sep=';', index_col=False
-)
-df21_pres = df21[df21['TIPO_ELECCION'] == 'PRESIDENCIAL'].copy()
-for col in ['VOTOS_P1','VOTOS_P2','VOTOS_VB','VOTOS_VN']:
-    df21_pres[col] = pd.to_numeric(df21_pres[col], errors='coerce').fillna(0)
-df21_pres = df21_pres.rename(columns={
-    'MESA_DE_VOTACION': 'mesa_int',
-    'VOTOS_P1': 'castillo_21',
-    'VOTOS_P2': 'keiko_21',
-    'VOTOS_VB': 'blancos_21',
-    'VOTOS_VN': 'nulos_21',
-})
-df21_pres['tv_21'] = df21_pres['castillo_21'] + df21_pres['keiko_21']
-df21_pres = df21_pres[df21_pres['tv_21'] > 0][['mesa_int','castillo_21','keiko_21','blancos_21','nulos_21','tv_21']]
-print(f"  2021 tables: {len(df21_pres):,}")
-
-# ── STEP 3: Load R2 2026 live results (table level) ───────────────────────────
-print("[4/6] Loading R2 2026 live results...")
-live_json = json.loads((DATA / 'live.json').read_text())
-live_meta = live_json.get('meta', {})
-counted_mesas_set = set()
-
-# Try table-level parquet first
-live_raw_path = DATA / 'live_raw.parquet'
-if live_raw_path.exists():
-    live_raw = pd.read_parquet(live_raw_path)
-    live_raw = live_raw[live_raw['estado'] == 'C'].copy()
-    live_raw['k_votes'] = pd.to_numeric(live_raw['k_votes'], errors='coerce').fillna(0)
-    live_raw['s_votes'] = pd.to_numeric(live_raw['s_votes'], errors='coerce').fillna(0)
-    live_raw['blancos'] = pd.to_numeric(live_raw['blancos'], errors='coerce').fillna(0)
-    live_raw['nulos']   = pd.to_numeric(live_raw['nulos'],   errors='coerce').fillna(0)
-    live_raw['tv_r2']   = live_raw['k_votes'] + live_raw['s_votes']
-    live_raw['keiko_r2_sh'] = np.where(
-        live_raw['tv_r2'] > 0, live_raw['k_votes'] / live_raw['tv_r2'], np.nan)
-    counted_mesas_set = set(live_raw['codigo_mesa'])
-    print(f"  Live tables (parquet): {len(live_raw):,}")
-    use_table_level_r2 = True
-else:
-    # Fall back to district-level aggregates from live.json
-    print("  WARNING: live_raw.parquet not found. Using district aggregates.")
-    print("  Forecast uncertainty will be larger.")
-    live_raw = pd.DataFrame()
-    use_table_level_r2 = False
-
-n_counted = live_meta.get('counted_mesas', 0)
-n_uncounted = 92766 - n_counted
-pct_rep = live_meta.get('pct_reported', 0)
-k_total_live = live_meta.get('k_votes', 0)
-s_total_live = live_meta.get('s_votes', 0)
-current_margin = k_total_live - s_total_live
-print(f"  Counted: {n_counted:,} ({pct_rep:.1f}%)")
-print(f"  Current margin: {current_margin:+,} (Keiko {'ahead' if current_margin>0 else 'behind'})")
-
-# ── STEP 4: Build full feature matrix ─────────────────────────────────────────
-print("[5/6] Building feature matrix and fitting model...")
-
+# ── 4. Build full feature matrix ───────────────────────────────────────────────
+print("[4/7] Building features...")
 df = (meta
-    .merge(r1_wide, on='codigo_mesa', how='left')
-    .merge(df21_pres, on='mesa_int', how='left')
+    .merge(r1w, on='codigo_mesa', how='left')
+    .merge(df21p[['mesa_int','k21_sh']], on='mesa_int', how='left')
+    .merge(d21_dist[['id_ubigeo','k21_sh_dist']], on='id_ubigeo', how='left')
 )
-for c in FEAT_COLS:
-    df[c] = df[c].fillna(0)
+for p in KEY.values():
+    if p not in df.columns: df[p] = 0
+    df[p] = df[p].fillna(0)
 df['tv_r1']   = df['tv_r1'].fillna(0)
-df['ta_r1']   = df['ta_r1'].fillna(0)
-df['tv_21']   = df['tv_21'].fillna(0)
-df['keiko_21_sh'] = np.where(df['tv_21'] > 0, df['keiko_21'] / df['tv_21'], np.nan)
-df['castillo_21_sh'] = np.where(df['tv_21'] > 0, df['castillo_21'] / df['tv_21'], np.nan)
+df['k21_sh']  = df['k21_sh'].fillna(df['k21_sh_dist']).fillna(k21_nat)
+df['avg_vv']  = df['tv_r1'].clip(lower=1) * 0.88   # imputed R2 valid votes
+df['avg_vv']  = df['avg_vv'].clip(lower=50, upper=400)
+for p in KEY.values():
+    df[f'{p}_sh'] = np.where(df['tv_r1']>0, df[p]/df['tv_r1'], 0.0)
 
-# Normalize R1 shares by total valid votes
-for p in FEAT_COLS:
-    df[f'{p}_sh'] = np.where(df['tv_r1'] > 0, df[p] / df['tv_r1'], 0.0)
+# Assign R2 share to each table from live.json district aggregate
+df['live_d']   = df['shp_ubigeo'].map(lambda u: lByU.get(str(u)) if pd.notna(u) else None)
+df['r2_sh']    = df['live_d'].map(
+    lambda d: d['k']/(d['k']+d['s']) if d and (d['k']+d['s'])>0 else np.nan)
+df['cm_frac']  = df['live_d'].map(lambda d: d['cm']/max(d['tm'],1) if d else 0.0)
+df['cm_count'] = df['live_d'].map(lambda d: d['cm'] if d else 0)
 
-FEAT_SH = [f'{p}_sh' for p in FEAT_COLS] + ['keiko_21_sh']
+# Counted/uncounted: for each district, mark exactly cm tables as "counted"
+# (those with r2_sh available), rest as uncounted.
+# This correctly handles districts with few counted tables.
+df['is_cnt'] = False
+for shp_ub, d_info in lByU.items():
+    cm = d_info['cm']
+    if cm <= 0: continue
+    mask = df['shp_ubigeo'] == shp_ub
+    idx = df[mask].index[:cm]  # take first cm tables from this district
+    df.loc[idx, 'is_cnt'] = True
 
-# Split counted vs uncounted
-if use_table_level_r2 and len(live_raw) > 0:
-    df_counted   = df[df['codigo_mesa'].isin(counted_mesas_set)].copy()
-    df_uncounted = df[~df['codigo_mesa'].isin(counted_mesas_set)].copy()
-    
-    # Merge R2 results onto counted tables
-    df_counted = df_counted.merge(
-        live_raw[['codigo_mesa','k_votes','s_votes','blancos','nulos','tv_r2','keiko_r2_sh']],
-        on='codigo_mesa', how='left'
-    )
-    df_counted = df_counted[df_counted['keiko_r2_sh'].notna()].copy()
-else:
-    # No table-level R2 — use district aggregates as proxy
-    df_counted   = df[df['codigo_estado_acta'] == 'C'].copy()
-    df_uncounted = df[df['codigo_estado_acta'] != 'C'].copy()
-    # Assign R2 share from live.json district aggregates
-    lByU = {d['u']: d for d in live_json.get('districts', [])}
-    df_counted['keiko_r2_sh'] = df_counted['dist'].map(
-        lambda u: lByU[str(u)]['k']/(lByU[str(u)]['k']+lByU[str(u)]['s'])
-                  if str(u) in lByU and (lByU[str(u)]['k']+lByU[str(u)]['s'])>0 else np.nan
-    )
-    df_counted = df_counted[df_counted['keiko_r2_sh'].notna()]
-    df_counted['tv_r2'] = df_counted['votos_validos'].fillna(df_counted['tv_r1'] * 0.92)
-    df_counted['k_votes'] = df_counted['keiko_r2_sh'] * df_counted['tv_r2']
-    df_counted['s_votes'] = (1 - df_counted['keiko_r2_sh']) * df_counted['tv_r2']
+df_cnt = df[df['is_cnt']].copy()
+df_unc = df[~df['is_cnt']].copy()
+print(f"  Counted: {len(df_cnt):,}  Uncounted: {len(df_unc):,}")
 
-print(f"  Counted tables for fitting: {len(df_counted):,}")
-print(f"  Uncounted tables to predict: {len(df_uncounted):,}")
+# ── 5. Fit R1 vote-flow models at each geographic level ───────────────────────
+print("[5/7] Fitting R1 vote-flow models at each level...")
 
-if len(df_counted) < 10:
-    print("  Too few counted tables — using 2021-only prior")
-    beta_nat = None
-    sigma_nat = 0.12
-    national_mean_pred = 0.5
-else:
-    # ── National OLS (with 2021 share as feature) ──────────────────────────────
-    # Features: R1 party shares + 2021 keiko share
-    X_cols = [f'{p}_sh' for p in FEAT_COLS] + ['keiko_21_sh']
-    df_fit = df_counted.dropna(subset=['keiko_r2_sh']).copy()
-    # Fill missing 2021 with national mean
-    nat_keiko_21_sh = df_fit['keiko_21_sh'].mean()
-    df_fit['keiko_21_sh'] = df_fit['keiko_21_sh'].fillna(nat_keiko_21_sh)
-    
-    X = df_fit[X_cols].fillna(0).values
-    y = df_fit['keiko_r2_sh'].values
-    w = np.sqrt(df_fit['tv_r2'].clip(lower=1).values)  # weight by sqrt(valid votes)
-    
-    # Weighted OLS via normal equations
-    X_aug = np.column_stack([np.ones(len(X)), X])
-    W = np.diag(w)
-    try:
-        XtWX = X_aug.T @ W @ X_aug
-        XtWy = X_aug.T @ W @ y
-        beta_nat = np.linalg.solve(XtWX + np.eye(len(XtWX))*1e-8, XtWy)
-        y_pred_nat = X_aug @ beta_nat
-        residuals_nat = y - y_pred_nat
-        sigma_nat = np.std(residuals_nat)
-        r2_nat = 1 - np.var(residuals_nat)/np.var(y)
-        national_mean_pred = np.mean(y_pred_nat)
-        print(f"  National OLS R²: {r2_nat:.4f}  σ: {sigma_nat:.4f}  n={len(df_fit):,}")
-    except:
-        beta_nat = None
-        sigma_nat = 0.12
-        national_mean_pred = df_counted['keiko_r2_sh'].mean() if len(df_counted)>0 else 0.5
-        print(f"  OLS failed — using national mean {national_mean_pred:.4f}")
+# Counted tables: r2_sh = district aggregate (best proxy available without live_raw.parquet)
+df_cnt_valid = df_cnt.dropna(subset=['r2_sh'])
 
-# ── Compute geographic residuals at district/province/dept level ───────────────
-def geo_residuals(df_fit_with_residuals, level_col, min_n):
-    """Compute mean residual and σ at each geographic level."""
-    grp = df_fit_with_residuals.groupby(level_col)['residual']
-    stats_df = pd.DataFrame({
-        'mean_resid': grp.mean(),
-        'std_resid':  grp.std().fillna(0.08),
-        'n':          grp.count(),
-    }).reset_index()
-    stats_df['std_resid'] = stats_df['std_resid'].clip(lower=0.02)
-    # Only trust levels with enough tables
-    stats_df.loc[stats_df['n'] < min_n, 'mean_resid'] = 0.0
-    return stats_df
+# National model
+beta_nat, r2_nat = fit_flow_model(df_cnt_valid, FEATS, min_n=20)
+print(f"  National OLS: R²={r2_nat:.3f}  n={len(df_cnt_valid):,}")
 
-if beta_nat is not None and len(df_counted) >= 10:
-    df_fit2 = df_counted.dropna(subset=['keiko_r2_sh']).copy()
-    df_fit2['keiko_21_sh'] = df_fit2['keiko_21_sh'].fillna(nat_keiko_21_sh)
-    X2 = df_fit2[[f'{p}_sh' for p in FEAT_COLS]+['keiko_21_sh']].fillna(0).values
-    X2_aug = np.column_stack([np.ones(len(X2)), X2])
-    df_fit2['nat_pred'] = X2_aug @ beta_nat
-    df_fit2['residual'] = df_fit2['keiko_r2_sh'] - df_fit2['nat_pred']
-    
-    resid_dist  = geo_residuals(df_fit2, 'dist',  MIN_DIST_N)
-    resid_prov  = geo_residuals(df_fit2, 'prov',  MIN_PROV_N)
-    resid_dept  = geo_residuals(df_fit2, 'dept',  2)
-    
-    # Index by geo code
-    rd_dict = resid_dist.set_index('dist').to_dict('index')
-    rp_dict = resid_prov.set_index('prov').to_dict('index')
-    rk_dict = resid_dept.set_index('dept').to_dict('index')
-    
-    print(f"  Districts with residual data: {len(resid_dist[resid_dist['n']>=MIN_DIST_N]):,}")
-    print(f"  Provinces with residual data: {len(resid_prov[resid_prov['n']>=MIN_PROV_N]):,}")
-    print(f"  Departments with residual data: {len(resid_dept):,}")
-else:
-    rd_dict = rp_dict = rk_dict = {}
+# Department models
+dept_models = {}
+for dept_id, grp in df_cnt_valid.groupby('dept'):
+    beta, r2 = fit_flow_model(grp, FEATS, min_n=5)
+    dept_models[dept_id] = {'beta': beta, 'r2': r2, 'n': len(grp)}
 
-# ── STEP 5: Predict each uncounted table ──────────────────────────────────────
-# Impute valid votes for uncounted tables
-# Use R2 2021 turnout if available, else R1 total with correction factor
-if len(df_counted) > 0:
-    tv_correction = (df_counted['tv_r2'].mean() / 
-                    df_counted['tv_r1'].clip(lower=1).mean()) if len(df_counted)>0 else 0.88
-else:
-    tv_correction = 0.88  # R2 typically ~12% lower than R1 valid votes
-tv_correction = np.clip(tv_correction, 0.75, 1.05)
-print(f"  Turnout correction (R2/R1): {tv_correction:.3f}")
+# Province models
+prov_models = {}
+for prov_id, grp in df_cnt_valid.groupby('prov'):
+    beta, r2 = fit_flow_model(grp, FEATS, min_n=3)
+    prov_models[prov_id] = {'beta': beta, 'r2': r2, 'n': len(grp)}
 
-nat_keiko_21_sh_global = df['keiko_21_sh'].mean() if df['keiko_21_sh'].notna().any() else 0.5
+# District models (few counted tables per district — mostly single values)
+dist_models = {}
+for dist_id, grp in df_cnt_valid.groupby('dist'):
+    beta, r2 = fit_flow_model(grp, FEATS, min_n=3)
+    dist_models[dist_id] = {
+        'beta': beta, 'r2': r2, 'n': len(grp),
+        'r2_mean': float(grp['r2_sh'].mean()),   # district R2 mean directly
+        'cm': int(grp['cm_count'].iloc[0]) if len(grp) > 0 else 1,
+    }
 
-# National σ from 2021 (across all tables, how much did keiko_21 vary from district mean?)
-sigma_2021 = df['keiko_21_sh'].std() if df['keiko_21_sh'].notna().any() else 0.12
-sigma_2021 = max(sigma_2021, 0.06)
+# R2 means at each level for uncounted tables
+prov_r2_mean = df_cnt_valid.groupby('prov')['r2_sh'].agg(['mean','count','std'])
+dept_r2_mean = df_cnt_valid.groupby('dept')['r2_sh'].agg(['mean','count','std'])
+nat_r2_mean  = float(df_cnt_valid['r2_sh'].mean()) if len(df_cnt_valid) > 0 else k21_nat
 
-mu_list    = []  # predicted keiko R2 share per uncounted table
-sigma_list = []  # uncertainty per uncounted table
-tv_list    = []  # imputed valid votes
+print(f"  Dept models: {len(dept_models)}  Prov models: {len(prov_models)}  "
+      f"Dist models: {len(dist_models)}")
 
-for _, row in df_uncounted.iterrows():
+# ── 6. Predict each uncounted table + assign σ ────────────────────────────────
+print("[6/7] Predicting uncounted tables...")
+
+mu_list    = []   # predicted Keiko share per uncounted table
+sigma_list = []   # per-table σ IN VOTES
+vv_list    = []   # imputed valid votes per table
+group_list = []   # which geographic group (for correlated draws)
+level_list = []   # which prediction level used
+
+for _, row in df_unc.iterrows():
     dist_id = int(row['dist'])
     prov_id = int(row['prov'])
     dept_id = int(row['dept'])
-    
-    # National prediction
-    if beta_nat is not None:
-        x_feat = np.array([1.0] + 
-            [row.get(f'{p}_sh', 0) for p in FEAT_COLS] +
-            [row['keiko_21_sh'] if pd.notna(row['keiko_21_sh']) else nat_keiko_21_sh_global])
-        mu_nat = float(x_feat @ beta_nat)
-        mu_nat = np.clip(mu_nat, 0.02, 0.98)
+    avg_vv_t = float(row['avg_vv'])
+
+    # --- PREDICTION HIERARCHY ---
+    # Level 1: district has R2 data
+    if dist_id in dist_models:
+        dm  = dist_models[dist_id]
+        cm  = dm['cm']                         # counted tables in district
+        mu_base = dm['r2_mean']                # district R2 mean
+        # R1 OLS correction within district
+        if dm['beta'] is not None:
+            mu_ols = predict_r2(row, dm['beta'])
+            r2_d   = dm['r2']
+            mu     = mu_base + (mu_ols - mu_base) * r2_d   # blend toward OLS
+        else:
+            mu     = mu_base
+            r2_d   = 0.0
+        # σ: within-district variation, reduced by R1 R², plus uncertainty in district mean
+        sigma_within = SIGMA_WITHIN['district'] * math.sqrt(1 - r2_d * 0.5)
+        sigma_mean   = SIGMA_WITHIN['district'] / math.sqrt(max(cm, 1))
+        sigma_sh     = math.sqrt(sigma_within**2 + sigma_mean**2)
+        group_key    = ('dist', dist_id)
+        level        = 'district'
+
+    # Level 2: province has R2 data
+    elif prov_id in prov_r2_mean.index:
+        pr     = prov_r2_mean.loc[prov_id]
+        n_prov = int(pr['count'])
+        mu_base = float(pr['mean'])
+        if prov_id in prov_models and prov_models[prov_id]['beta'] is not None:
+            pm      = prov_models[prov_id]
+            mu_ols  = predict_r2(row, pm['beta'])
+            r2_p    = pm['r2']
+            mu      = mu_base + (mu_ols - mu_base) * r2_p
+        else:
+            mu      = mu_base
+            r2_p    = 0.0
+        sigma_sh = SIGMA_WITHIN['province'] * math.sqrt(1 - r2_p * 0.5)
+        group_key = ('prov', prov_id)
+        level     = 'province'
+
+    # Level 3: department has R2 data
+    elif dept_id in dept_r2_mean.index:
+        dr     = dept_r2_mean.loc[dept_id]
+        mu_base = float(dr['mean'])
+        if dept_id in dept_models and dept_models[dept_id]['beta'] is not None:
+            dm2    = dept_models[dept_id]
+            mu_ols = predict_r2(row, dm2['beta'])
+            r2_k   = dm2['r2']
+            mu     = mu_base + (mu_ols - mu_base) * r2_k
+        else:
+            mu     = mu_base
+            r2_k   = 0.0
+        sigma_sh  = SIGMA_WITHIN['dept'] * math.sqrt(1 - r2_k * 0.5)
+        group_key = ('dept', dept_id)
+        level     = 'dept'
+
+    # Level 4: R1 national model + 2021 anchor
     else:
-        mu_nat = national_mean_pred if national_mean_pred is not None else 0.5
-    
-    # 2021 table-level prior
-    has_2021 = pd.notna(row.get('keiko_21_sh'))
-    if has_2021:
-        mu_2021 = float(row['keiko_21_sh'])
-        # Adjust 2021 by the national swing observed in counted tables
-        if len(df_counted) > 0 and beta_nat is not None:
-            swing = national_mean_pred - (df['keiko_21_sh'].mean() if df['keiko_21_sh'].notna().any() else 0.5)
-            mu_2021 = np.clip(mu_2021 + swing * 0.6, 0.02, 0.98)
-        prec_2021 = TAU_2021 / (sigma_2021 ** 2)
-    else:
-        mu_2021 = mu_nat
-        prec_2021 = TAU_2021 / 4 / (sigma_2021 ** 2)  # weaker prior
-    
-    # Geographic residual adjustments with precisions
-    prec_nat  = max(0, len(df_counted)) / max(sigma_nat**2, 0.001) / 50.0
-    
-    # District level
-    rd = rd_dict.get(dist_id, {})
-    if rd and rd.get('n', 0) >= MIN_DIST_N:
-        mu_dist   = mu_nat + rd['mean_resid']
-        prec_dist = rd['n'] / max(rd['std_resid']**2, 0.001)
-    else:
-        mu_dist   = mu_nat
-        prec_dist = 0.0
-    
-    # Province level
-    rp = rp_dict.get(prov_id, {})
-    if rp and rp.get('n', 0) >= MIN_PROV_N:
-        mu_prov   = mu_nat + rp['mean_resid']
-        prec_prov = rp['n'] / max(rp['std_resid']**2, 0.001) / 3.0
-    else:
-        mu_prov   = mu_nat
-        prec_prov = 0.0
-    
-    # Department level
-    rk = rk_dict.get(dept_id, {})
-    if rk:
-        mu_dept   = mu_nat + rk.get('mean_resid', 0)
-        prec_dept = max(rk.get('n',0),1) / max(rk.get('std_resid',0.08)**2, 0.001) / 8.0
-    else:
-        mu_dept   = mu_nat
-        prec_dept = 0.0
-    
-    # Precision-weighted combination
-    total_prec = prec_2021 + prec_dist + prec_prov + prec_dept + prec_nat
-    total_prec = max(total_prec, 1e-6)
-    
-    mu_final = (prec_2021*mu_2021 + prec_dist*mu_dist + 
-                prec_prov*mu_prov + prec_dept*mu_dept + 
-                prec_nat*mu_nat) / total_prec
-    mu_final = np.clip(mu_final, 0.02, 0.98)
-    
-    # Posterior variance: 1/total_precision + irreducible model error
-    sigma_pred = np.sqrt(1.0/total_prec + sigma_nat**2)
-    sigma_pred = np.clip(sigma_pred, 0.02, 0.25)
-    
-    # Imputed valid votes
-    tv_r1_row = row.get('tv_r1', 0) or 0
-    tv_21_row = row.get('tv_21', 0) or 0
-    if tv_r1_row > 0:
-        tv_imputed = tv_r1_row * tv_correction
-    elif tv_21_row > 0:
-        tv_imputed = tv_21_row * (tv_correction * 1.05)
-    else:
-        tv_imputed = 150.0  # national average valid votes per table
-    
-    mu_list.append(mu_final)
-    sigma_list.append(sigma_pred)
-    tv_list.append(tv_imputed)
+        k21_t = float(row.get('k21_sh', k21_nat))
+        if beta_nat is not None:
+            mu_ols = predict_r2(row, beta_nat)
+            # Blend 2021 prior and OLS (2021 weighted by TAU, OLS by R² strength)
+            mu = mu_ols * r2_nat + k21_t * (1 - r2_nat)
+        else:
+            mu = k21_t
+        sigma_sh  = SIGMA_WITHIN['national'] * math.sqrt(1 - r2_nat * 0.3)
+        group_key = ('nat', 0)
+        level     = 'national'
+
+    mu = float(np.clip(mu, 0.02, 0.98))
+
+    # σ in votes for this table
+    sigma_votes = sigma_sh * avg_vv_t
+
+    mu_list.append(mu)
+    sigma_list.append(sigma_votes)
+    vv_list.append(avg_vv_t)
+    group_list.append(group_key)
+    level_list.append(level)
 
 mu_arr    = np.array(mu_list)
 sigma_arr = np.array(sigma_list)
-tv_arr    = np.array(tv_list)
+vv_arr    = np.array(vv_list)
 
-print(f"  Predicted {len(mu_arr):,} uncounted tables")
-print(f"  Mean predicted Keiko share in uncounted: {mu_arr.mean():.3f}")
-print(f"  Mean σ per table: {sigma_arr.mean():.4f}")
+level_counts = pd.Series(level_list).value_counts()
+print(f"  Prediction levels:")
+for lv, cnt in level_counts.items():
+    med_sig = np.median([sigma_list[i] for i,l in enumerate(level_list) if l==lv])
+    print(f"    {lv:12s}: {cnt:6,} tables  median σ={med_sig:.1f} votes/table")
 
-# ── STEP 6: Monte Carlo simulation ────────────────────────────────────────────
-print(f"\n[6/6] Monte Carlo simulation ({N_SIMS:,} runs)...")
+# ── 7. Monte Carlo with correct correlated error structure ────────────────────
+# KEY: errors are correlated within each (level, group_id) cluster.
+# All uncounted tables in the same district share the same district-level shock.
+# All tables in the same province share the same province-level shock.
+# These do NOT cancel — they accumulate linearly for each cluster.
+#
+# Total variance = Σ_t σ²_within(t)            [independent, cancels as sqrt(n)]
+#               + Σ_groups (Σ_t∈group vv_t)² × σ²_group_mean
+#                 [correlated, grows as n]
+#
+# We implement this directly in the MC by drawing one shared error per group.
 
-# Draw from N(mu, sigma) for each uncounted table × each simulation
-# Shape: (n_uncounted, N_SIMS)
-draws = np.random.normal(
-    mu_arr[:, None],
-    sigma_arr[:, None],
-    size=(len(mu_arr), N_SIMS)
+print(f"\n[7/7] Monte Carlo ({N_SIMS:,} simulations)...")
+
+# Unique groups
+unique_groups = list(set(group_list))
+group_arr = np.array(group_list, dtype=object)  # shape (n_tables,) of tuples
+
+# For each group: compute the GROUP-LEVEL σ (uncertainty in the group mean prediction)
+# This is what creates correlated errors across all tables in the group.
+group_sigma = {}
+for gk in unique_groups:
+    mask = group_arr == gk
+    gtype, gid = gk
+    if gtype == 'dist':
+        dm = dist_models.get(gid, {})
+        cm = dm.get('cm', 1)
+        r2 = dm.get('r2', 0.0)
+        # Uncertainty in district mean = within_dist_σ / sqrt(cm_counted)
+        # Plus: are the counted tables representative of uncounted ones? → add floor
+        sigma_g = SIGMA_WITHIN['district'] / math.sqrt(max(cm, 1))
+        sigma_g = max(sigma_g, SIGMA_WITHIN['district'] * 0.3)   # floor
+    elif gtype == 'prov':
+        pr = prov_r2_mean.loc[gid] if gid in prov_r2_mean.index else None
+        n  = int(pr['count']) if pr is not None else 1
+        sigma_g = SIGMA_WITHIN['province'] / math.sqrt(max(n, 1))
+        sigma_g = max(sigma_g, SIGMA_WITHIN['province'] * 0.4)
+    elif gtype == 'dept':
+        dr = dept_r2_mean.loc[gid] if gid in dept_r2_mean.index else None
+        n  = int(dr['count']) if dr is not None else 1
+        sigma_g = SIGMA_WITHIN['dept'] / math.sqrt(max(n, 1))
+        sigma_g = max(sigma_g, SIGMA_WITHIN['dept'] * 0.5)
+    else:  # national
+        sigma_g = SIGMA_WITHIN['national']
+    group_sigma[gk] = sigma_g
+
+# Group total vote weight (for computing correlated variance contribution)
+group_to_idx = {gk: np.array([i for i, g in enumerate(group_list) if g == gk]) for gk in unique_groups}
+
+group_vv_sum = {}
+for gk in unique_groups:
+    idxs = group_to_idx[gk]
+    group_vv_sum[gk] = float(vv_arr[idxs].sum())
+
+# Print uncertainty breakdown
+print(f"  Uncertainty components:")
+var_independent = float(np.sum(sigma_arr**2))
+var_correlated  = sum(
+    group_vv_sum[gk]**2 * group_sigma[gk]**2
+    for gk in unique_groups
 )
-draws = np.clip(draws, 0.0, 1.0)
+sigma_ind  = math.sqrt(var_independent)
+sigma_corr = math.sqrt(var_correlated)
+sigma_tot_approx = math.sqrt(var_independent + var_correlated)
+print(f"    Independent (within-group): ±{sigma_ind:,.0f} votes")
+print(f"    Correlated (group mean error): ±{sigma_corr:,.0f} votes")
+print(f"    Total (approx):  ±{sigma_tot_approx:,.0f} votes")
+print(f"    Expected 95% CI: ±{1.96*sigma_tot_approx:,.0f} votes")
 
-# Votes per table per simulation
-k_draws = draws       * tv_arr[:, None]
-s_draws = (1 - draws) * tv_arr[:, None]
+# MC simulation
+all_margins = np.zeros(N_SIMS)
+for sim in range(N_SIMS):
+    # For each table: draw a share-space prediction
+    # = mu(t) + group_shock(share) + table_noise(share)
+    # Then convert to votes
 
-# National totals per simulation
-k_uncounted_sims = k_draws.sum(axis=0)
-s_uncounted_sims = s_draws.sum(axis=0)
+    # Table-level independent noise (in share space)
+    table_sigma_sh = sigma_arr / vv_arr   # convert votes back to share
+    table_noise_sh = np.random.normal(0, table_sigma_sh)
 
-# Add current counted votes
-k_final_sims = k_total_live + k_uncounted_sims
-s_final_sims = s_total_live + s_uncounted_sims
-margin_sims  = k_final_sims - s_final_sims
+    # Group-level correlated shock (in share space, shared by all tables in group)
+    keiko_sh = mu_arr + table_noise_sh
+    for gk, idxs in group_to_idx.items():
+        group_shock_sh = np.random.normal(0, group_sigma[gk])
+        keiko_sh[idxs] += group_shock_sh
 
-# Results
-win_prob_keiko   = float((margin_sims > 0).mean())
-win_prob_sanchez = 1.0 - win_prob_keiko
-proj_margin      = float(np.median(margin_sims))
-ci_lo_95         = float(np.percentile(margin_sims, 2.5))
-ci_hi_95         = float(np.percentile(margin_sims, 97.5))
-ci_lo_80         = float(np.percentile(margin_sims, 10))
-ci_hi_80         = float(np.percentile(margin_sims, 90))
-sigma_total      = float(np.std(margin_sims))
+    keiko_sh = np.clip(keiko_sh, 0.0, 1.0)
+    k_unc = float((keiko_sh * vv_arr).sum())
+    s_unc = float(((1 - keiko_sh) * vv_arr).sum())
+    all_margins[sim] = (k_live + k_unc) - (s_live + s_unc)
 
-# Expected final vote shares
-k_pct_sims = k_final_sims / (k_final_sims + s_final_sims) * 100
-proj_k_pct = float(np.median(k_pct_sims))
-ci_k_lo    = float(np.percentile(k_pct_sims, 2.5))
-ci_k_hi    = float(np.percentile(k_pct_sims, 97.5))
+win_k   = float((all_margins > 0).mean())
+proj_m  = float(np.median(all_margins))
+ci95_lo = float(np.percentile(all_margins, 2.5))
+ci95_hi = float(np.percentile(all_margins, 97.5))
+ci80_lo = float(np.percentile(all_margins, 10))
+ci80_hi = float(np.percentile(all_margins, 90))
+sigma_t = float(np.std(all_margins))
+proj_k_pct = (k_live + float(np.sum(mu_arr * vv_arr))) / (vl + float(vv_arr.sum())) * 100
 
 print(f"\n{'='*50}")
 print(f"FORECAST RESULTS")
 print(f"{'='*50}")
-print(f"  Win probability — Keiko:   {win_prob_keiko:.1%}")
-print(f"  Win probability — Sánchez: {win_prob_sanchez:.1%}")
-print(f"  Projected final margin: {proj_margin:+,.0f} votes")
-print(f"  95% CI: [{ci_lo_95:+,.0f}, {ci_hi_95:+,.0f}]")
-print(f"  Projected Keiko share: {proj_k_pct:.2f}% [{ci_k_lo:.2f}%, {ci_k_hi:.2f}%]")
-print(f"  σ (total): {sigma_total:,.0f} votes")
+print(f"  Win prob Keiko:   {win_k:.1%}")
+print(f"  Win prob Sánchez: {1-win_k:.1%}")
+print(f"  Current margin:   {margin:+,}")
+print(f"  Projected margin: {proj_m:+,.0f}")
+print(f"  95% CI:  [{ci95_lo:+,.0f}, {ci95_hi:+,.0f}]")
+print(f"  80% CI:  [{ci80_lo:+,.0f}, {ci80_hi:+,.0f}]")
+print(f"  σ total: {sigma_t:,.0f} votes")
 
-# ── Output ────────────────────────────────────────────────────────────────────
-# Export histogram bins for the NYT-style needle distribution
-hist_vals, hist_edges = np.histogram(margin_sims, bins=80)
-hist_centers = ((hist_edges[:-1] + hist_edges[1:]) / 2).tolist()
-
-forecast = {
+hist_v, hist_e = np.histogram(all_margins, bins=80)
+out = DATA / 'forecast.json'
+out.write_text(json.dumps({
     "meta": {
-        "timestamp":       datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
-        "counted_mesas":   n_counted,
-        "pct_reported":    round(pct_rep, 2),
-        "use_table_level": use_table_level_r2,
-        "model_r2":        round(r2_nat if beta_nat is not None and 'r2_nat' in dir() else 0, 4),
-        "sigma_nat":       round(sigma_nat, 4),
-        "n_sims":          N_SIMS,
+        "timestamp":        datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "counted_mesas":    n_cnt,
+        "pct_reported":     round(pct, 2),
+        "model_r2_nat":     round(r2_nat, 4),
+        "sigma_total":      int(sigma_t),
+        "sigma_independent":int(sigma_ind),
+        "sigma_correlated": int(sigma_corr),
+        "n_sims":           N_SIMS,
+        "status":           "alta" if pct>50 else "moderada" if pct>10 else "baja",
     },
     "results": {
-        "win_prob_keiko":   round(win_prob_keiko, 4),
-        "win_prob_sanchez": round(win_prob_sanchez, 4),
-        "current_margin":   int(current_margin),
-        "proj_margin":      int(proj_margin),
+        "win_prob_keiko":   round(win_k, 4),
+        "win_prob_sanchez": round(1 - win_k, 4),
+        "current_margin":   int(margin),
+        "proj_margin":      int(proj_m),
         "proj_k_pct":       round(proj_k_pct, 3),
         "proj_s_pct":       round(100 - proj_k_pct, 3),
-        "ci_95_lo":         int(ci_lo_95),
-        "ci_95_hi":         int(ci_hi_95),
-        "ci_80_lo":         int(ci_lo_80),
-        "ci_80_hi":         int(ci_hi_80),
-        "sigma":            int(sigma_total),
-        "ci_k_lo":          round(ci_k_lo, 3),
-        "ci_k_hi":          round(ci_k_hi, 3),
+        "ci_95_lo":         int(ci95_lo),
+        "ci_95_hi":         int(ci95_hi),
+        "ci_80_lo":         int(ci80_lo),
+        "ci_80_hi":         int(ci80_hi),
+        "sigma":            int(sigma_t),
     },
     "distribution": {
-        "bins":    [int(x) for x in hist_centers],
-        "counts":  [int(x) for x in hist_vals],
-        "x_min":   int(margin_sims.min()),
-        "x_max":   int(margin_sims.max()),
+        "bins":   [int((hist_e[i]+hist_e[i+1])/2) for i in range(len(hist_v))],
+        "counts": [int(x) for x in hist_v],
     }
-}
-
-out = DATA / 'forecast.json'
-out.write_text(json.dumps(forecast, ensure_ascii=False, indent=2))
-print(f"\n✅  Saved: {out}  ({out.stat().st_size//1024} KB)")
+}, ensure_ascii=False, indent=2))
+print(f"\n✅  Saved: {out}")
