@@ -185,7 +185,7 @@ tr:hover td { background: var(--bg); }
 <div class="panel active" id="panel-pronostico">
 <div class="card fc-w">
   <div class="card-t">Pronóstico Electoral</div>
-  <div class="card-s">MODELO JERÁRQUICO BAYESIANO · DATOS A NIVEL DE MESA DE VOTACIÓN · R1 2026 + SV 2021 + RESULTADOS EN VIVO</div>
+  <div class="card-s">BASADO EN MESAS CONTABILIZADAS · SE ACTUALIZA EN TIEMPO REAL</div>
 
   <div class="fc-top">
     <div class="fc-l">
@@ -311,40 +311,33 @@ tr:hover td { background: var(--bg); }
 <div class="panel" id="panel-metodologia">
 <div class="meth">
   <h3>Metodología del Pronóstico</h3>
-  <p>El pronóstico utiliza un modelo jerárquico bayesiano con datos a nivel de mesa de votación. A continuación se describe cada componente.</p>
+  <p>El pronóstico predice mesa por mesa. Para cada una de las ~85,000 mesas no contabilizadas, estimamos cuántos votos recibirá Keiko usando la jerarquía de datos más fina disponible.</p>
 
   <h4>Datos utilizados</h4>
   <ul>
-    <li><b>R1 2026 (nivel de mesa):</b> Votos por partido en cada una de las 92,766 mesas de votación. Permite conocer la composición exacta del electorado en cada mesa.</li>
-    <li><b>R2 2026 en vivo (nivel de mesa):</b> Resultados de la segunda vuelta conforme van llegando. Cada mesa contabilizada es un punto de observación para calibrar el modelo.</li>
-    <li><b>R2 2021 (nivel de mesa, 93% de cobertura):</b> Resultados Castillo vs. Keiko por mesa. Actúa como ancla bayesiana — antes de que lleguen datos de una mesa, usamos 2021 como prior, ajustado por el swing nacional observado en 2026.</li>
+    <li><b>R1 2026 (nivel de mesa):</b> Votos por partido en las 92,766 mesas. Sabemos la composición exacta del electorado de cada mesa.</li>
+    <li><b>R2 2026 en vivo:</b> Resultados de la segunda vuelta conforme llegan. Cada mesa contabilizada calibra el modelo.</li>
+    <li><b>R2 2021 (nivel de mesa, 93% de cobertura):</b> Castillo vs. Keiko por mesa. Es el mejor predictor individual: para cada mesa no contabilizada, sabemos qué pasó allí hace 5 años.</li>
   </ul>
 
-  <h4>Arquitectura del modelo</h4>
-  <p>Para cada mesa no contabilizada <code>t</code> en distrito <code>d</code>, provincia <code>p</code>, departamento <code>k</code>:</p>
+  <h4>Predicción por mesa</h4>
   <ul>
-    <li><b>Predicción nacional:</b> OLS ponderado con las shares de R1 como regresores y la share de Keiko en 2021 como covariable adicional.</li>
-    <li><b>Residuales geográficos:</b> Calculamos el residual medio del modelo nacional para cada nivel geográfico (mesa → local → distrito → provincia → departamento). Esto captura que los votantes de Nieto en Lima son distintos a los de Puno.</li>
-    <li><b>Combinación bayesiana:</b> Las predicciones de cada nivel se combinan mediante pesos de precisión (inverso de la varianza): <code>μ = Σ(prec_i × μ_i) / Σ(prec_i)</code>. Niveles con más datos tienen mayor precisión y dominan la predicción. El prior 2021 equivale a ~8 mesas virtuales.</li>
-    <li><b>Jerarquía de fallback (en orden):</b> Datos de mesas contabilizadas → nivel de local → distrito (ubigeo único) → provincia (ubigeo único) → departamento → nacional → 2021.</li>
+    <li><b>Nivel 1 — Distrito:</b> Si el distrito ya tiene resultados R2, usamos ese promedio + corrección R1.</li>
+    <li><b>Nivel 2 — Provincia:</b> Si no hay datos del distrito, usamos el promedio provincial + corrección R1.</li>
+    <li><b>Nivel 3 — Departamento:</b> Análogo.</li>
+    <li><b>Nivel 4 — 2021 + swing:</b> Si no hay datos del área, usamos el resultado de 2021 en esa mesa ajustado por el swing nacional observado en 2026.</li>
   </ul>
 
   <h4>Incertidumbre</h4>
-  <p>Para cada mesa no contabilizada:</p>
-  <ul>
-    <li><code>σ²(t) = 1/Σ(precisiones) + σ²_residual_nacional</code></li>
-    <li>La incertidumbre crece cuando: hay pocas mesas contabilizadas en el área, el distrito se desvía del modelo nacional, o la mesa no tiene par en 2021.</li>
-    <li>10,000 simulaciones Monte Carlo dan la distribución completa del margen final → IC 95% e IC 80%.</li>
-  </ul>
+  <p>Cada mesa recibe un σ según el nivel usado, calibrado con variación histórica de 2021: ~6 votos/mesa (distrito), ~11 votos/mesa (provincia), ~15 votos/mesa (departamento), ~28 votos/mesa (nacional). Las mesas del mismo grupo comparten el mismo error sistemático — si nos equivocamos en un distrito, nos equivocamos en todas sus mesas no contabilizadas. Esto produce intervalos de confianza realistas: amplios al inicio del escrutinio, estrechos al final. El gráfico de aguja muestra la escala dinámica según el IC 95% actual.</p>
 
   <h4>Flujo de votos</h4>
-  <p>Regresión OLS <i>within-district</i> (variables demeaned por distrito) para eliminar la falacia ecológica. Estima qué fracción de los votos de cada partido en R1 van a Keiko, Sánchez, blanco, nulo, o abstención en R2. Bootstrap con 200 iteraciones para intervalos de confianza.</p>
+  <p>Regresión OLS pura a nivel de mesa: <code>keiko_r2(t) = β₀ + β₁·fp_r1(t) + β₂·jpp_r1(t) + …</code> Cada observación es una mesa. Los coeficientes estiman el flujo marginal de cada partido R1 hacia cada destino R2. Bootstrap 200 iteraciones para intervalos de confianza.</p>
 
   <h4>Limitaciones</h4>
   <ul>
-    <li>El modelo asume que los residuales son i.i.d. dentro de cada nivel geográfico.</li>
-    <li>La inferencia ecológica (de tabla a votante individual) tiene limitaciones inherentes.</li>
-    <li>Eventos de último momento (escándalos, movilizaciones) no se capturan.</li>
+    <li>Sin datos de mesas individuales en R2 (solo agregados por distrito), la predicción within-district usa el promedio del distrito.</li>
+    <li>Eventos de último momento no se capturan.</li>
     <li>El prior 2021 puede estar desactualizado si el panorama político cambió estructuralmente.</li>
   </ul>
 </div>
@@ -447,7 +440,18 @@ async function loadFlows() {
 
 const SVG_W = 600, SVG_H = 260;
 const CX = 300, CY = 240, R = 210;  // arc center and radius
-const MARGIN_SCALE = 400000;  // total votes range for the arc (±400k)
+
+// MARGIN_SCALE is dynamic — set from forecast CI each render
+let MARGIN_SCALE = 400000;
+
+function updateMarginScale(fc) {
+  if (!fc?.results) { MARGIN_SCALE = 400000; return; }
+  const r = fc.results;
+  const ciMax = Math.max(Math.abs(r.ci_95_lo || 0), Math.abs(r.ci_95_hi || 0));
+  // Scale = max(200k, CI extreme) rounded up to nearest 100k
+  const raw = Math.max(200000, ciMax);
+  MARGIN_SCALE = Math.ceil(raw / 100000) * 100000;
+}
 
 function marginToAngle(margin) {
   // margin: negative = Sanchez, positive = Keiko
@@ -519,6 +523,9 @@ function renderNeedle() {
 function drawArcAndLabels(fc) {
   const svg = id('needle-svg');
 
+  // Update scale from CI before drawing anything
+  updateMarginScale(fc);
+
   // Draw arc background
   const arcSteps = 200;
   let arcPath = '';
@@ -578,10 +585,12 @@ function drawArcAndLabels(fc) {
     ciG.appendChild(ci80el);
   }
 
-  // Margin tick labels on arc
+  // Margin tick labels on arc — dynamic based on current scale
   const arcLblG = id('arc-labels');
   arcLblG.innerHTML = '';
-  const tickMargins = [-300000,-200000,-100000,0,100000,200000,300000];
+  const step = MARGIN_SCALE <= 300000 ? 100000 : MARGIN_SCALE <= 600000 ? 200000 : 300000;
+  const tickMargins = [];
+  for (let v = -MARGIN_SCALE; v <= MARGIN_SCALE; v += step) tickMargins.push(v);
   tickMargins.forEach(m => {
     const angle = marginToAngle(-m);
     if (Math.abs(angle) > Math.PI/2 * 0.98) return;
@@ -852,7 +861,7 @@ function updateDepts(){
   if(!S.lByU||!S.lByU.size||!S.r1)return;
   const depts={};
   for(const[u,r]of S.r1){const dept=r.r||'Desconocido';if(!depts[dept])depts[dept]={name:dept,r1tm:0,lk:0,ls:0,lm:0};depts[dept].r1tm+=r.tm;const ld=S.lByU.get(u);if(ld){depts[dept].lk+=ld.k||0;depts[dept].ls+=ld.s||0;depts[dept].lm+=ld.cm||0;}}
-  const rows=Object.values(depts).sort((a,b)=>(b.lk+b.ls)-(a.lk+a.ls));
+  const rows=Object.values(depts).filter(r=>(r.lk+r.ls)>0).sort((a,b)=>{const ta=a.lk+a.ls,tb=b.lk+b.ls;return (b.lk/tb)-(a.lk/ta);});
   id('dept-tb').innerHTML=rows.map(r=>{const tv=r.lk+r.ls;if(!tv)return'';const kP=r.lk/tv*100,m=r.lk-r.ls,mP=m/tv*100,pR=r.r1tm>0?r.lm/r.r1tm*100:0;return`<tr><td style="font-weight:600">${r.name}</td><td><span style="color:${CK}">${kP.toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.lk)}</span></td><td><span style="color:${CS}">${(100-kP).toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.ls)}</span></td><td style="color:${m>=0?CK:CS};font-weight:600">${m>=0?'+':''}${mP.toFixed(1)}%</td><td><div style="display:flex;align-items:center;gap:3px"><div style="flex:1;height:3px;background:var(--bg);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pR.toFixed(1)}%;background:#2d6a4f"></div></div>${pR.toFixed(0)}%</div></td><td style="color:var(--faint)">${fmt(r.lm)}/${fmt(r.r1tm)}</td></tr>`;}).join('');
 }
 
