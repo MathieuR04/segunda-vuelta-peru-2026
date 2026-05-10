@@ -189,24 +189,36 @@ for b in range(N_BOOTSTRAP):
     if (b + 1) % 100 == 0:
         print(f"  Bootstrap: {b+1}/{N_BOOTSTRAP}")
 
-# ── Extract and normalize flows ───────────────────────────────────────────────
+# ── Extract flows via counterfactual prediction ───────────────────────────────
+# For party s: what does the model predict when a table has 100% of votes for s?
+# x_s = [1, 0, ..., 1, ..., 0] (intercept=1, party s = 1, others = 0)
+# This gives interpretable flows: "if all R1 votes in a table were for party s,
+# what fraction of electores would go to each R2 destination?"
+# Then normalize the prediction vector to sum to 1 → probability distribution.
+
+# Baseline: x_base = [1, 0, 0, ..., 0] (intercept only, all party shares = 0)
+n_feats = X.shape[1]  # 1 intercept + n_parties
+x_base = np.zeros(n_feats); x_base[0] = 1.0
+
 flows_out = []
 for i, party in enumerate(SOURCE_PARTIES):
     row = {'party': party, 'name': PARTY_NAMES[party], 'color': PARTY_COLORS[party]}
 
-    # Coefficient at position i+1 for each destination
-    raw = np.array([float(main_coefs[dest][i + 1]) for dest in DESTS])
+    # Counterfactual: this party has 100% of R1 votes
+    x_party = x_base.copy(); x_party[i + 1] = 1.0
 
-    # Normalize: shift to non-negative then divide by sum
-    raw_pos = raw - raw.min()
-    s = raw_pos.sum()
-    flows = raw_pos / s if s > 1e-10 else np.ones(len(DESTS)) / len(DESTS)
+    # Predicted share for each destination
+    pred = np.array([float(x_party @ main_coefs[dest]) for dest in DESTS])
+    pred = np.clip(pred, 0, 1)
+    total = pred.sum()
+    flows = pred / total if total > 1e-10 else np.ones(len(DESTS)) / len(DESTS)
 
     for j, (dest, label) in enumerate(zip(DESTS, DEST_LABELS)):
         row[f'to_{label}'] = round(float(flows[j]), 4)
-        boot_vals = [float(boot[dest][b][i + 1]) for b in range(N_BOOTSTRAP)]
-        row[f'ci_{label}_lo'] = round(float(np.percentile(boot_vals, 5)), 4)
-        row[f'ci_{label}_hi'] = round(float(np.percentile(boot_vals, 95)), 4)
+        # Bootstrap CI on the counterfactual prediction
+        boot_preds = [float(x_party @ boot[dest][b]) for b in range(N_BOOTSTRAP)]
+        row[f'ci_{label}_lo'] = round(float(np.percentile(boot_preds, 5)), 4)
+        row[f'ci_{label}_hi'] = round(float(np.percentile(boot_preds, 95)), 4)
 
     flows_out.append(row)
     print(f"  {party:8s}: K={row['to_keiko']:.2f} S={row['to_sanchez']:.2f} "
