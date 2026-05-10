@@ -97,8 +97,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .mtt { font-size: 9px; padding: 2px 8px; border: 0.5px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--surface); color: var(--muted); white-space: nowrap; }
 .mtt.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 
-.map-layout { display: grid; grid-template-columns: 1fr 220px; gap: 8px; align-items: start; }
-@media (max-width: 620px) { .map-layout { grid-template-columns: 1fr; } .map-sb { display: none; } }
+.map-layout { display: flex; flex-direction: column; gap: 8px; }
 
 #mw {
   background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px;
@@ -113,13 +112,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 #tt { position: fixed; pointer-events: none; z-index: 200; background: var(--surface); border: 0.5px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 10px; line-height: 1.75; max-width: 210px; display: none; box-shadow: 0 3px 14px rgba(0,0,0,.13); }
 .map-sb { background: var(--surface); border: 0.5px solid var(--border-light); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .ms-t  { font-size: 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-.ms-cb { height: 10px; border-radius: 4px; margin: 3px 0; width: 100%; min-width: 200px; flex: 1; }
-.ms-cl { display: flex; justify-content: space-between; font-size: 8px; color: var(--faint); min-width: 200px; flex: 1; }
-.ms-it { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--muted); margin-bottom: 3px; }
+.ms-cb { height: 10px; border-radius: 4px; margin: 3px 0; display: block; }
+.ms-cl { display: flex; justify-content: space-between; font-size: 8px; color: var(--faint); }
+.ms-it { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--muted); margin-top: 4px; }
 .ms-sw { width: 13px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-.ms-cb-wrap { display: flex; flex-direction: column; flex: 1; min-width: 200px; }
-#sb-t { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-right: 16px; white-space: nowrap; align-self: center; }
-#sb-l { display: flex; align-items: center; gap: 16px; flex: 1; flex-wrap: wrap; }
+.ms-cb-wrap { display: flex; flex-direction: column; flex: 1; min-width: 260px; }
+#sb-t { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+#sb-l { display: flex; align-items: flex-start; gap: 20px; flex: 1; flex-wrap: wrap; min-width: 0; }
 .ms-ro { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 0.5px solid var(--border-light); font-size: 9px; }
 .ms-ro:last-child { border-bottom: none; }
 .ms-rn { color: var(--muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -443,13 +442,18 @@ async function loadFlows() {
 
 const SVG_W = 600, SVG_H = 260;
 const CX = 300, CY = 240, R = 210;  // arc center and radius
-const MARGIN_SCALE = 400000;  // total votes range for the arc (±400k)
+function getMarginScale(fc) {
+  if (!fc?.results) return 400000;
+  const ciAbs = Math.max(
+    Math.abs(fc.results.ci_95_lo || 0),
+    Math.abs(fc.results.ci_95_hi || 0),
+    200000
+  );
+  return Math.ceil(ciAbs / 100000) * 100000;
+}
 
-function marginToAngle(margin) {
-  // margin: negative = Sanchez, positive = Keiko
-  // angle: -90° (left/Keiko) to +90° (right/Sanchez)
-  // We map: margin=-SCALE → angle=-90°, margin=+SCALE → angle=+90°
-  // Note: in SVG angle convention for our arc, Keiko is LEFT (negative angle from top)
+function marginToAngle(margin, scale) {
+  const MARGIN_SCALE = scale || 400000;
   const frac = Math.max(-1, Math.min(1, margin / MARGIN_SCALE));
   return frac * Math.PI / 2;  // radians, 0=top, negative=left, positive=right
 }
@@ -514,6 +518,7 @@ function renderNeedle() {
 
 function drawArcAndLabels(fc) {
   const svg = id('needle-svg');
+  const _SCALE = getMarginScale(fc);
 
   // Draw arc background
   const arcSteps = 200;
@@ -535,7 +540,7 @@ function drawArcAndLabels(fc) {
     d.bins.forEach((margin, i) => {
       const count = d.counts[i];
       if (count === 0) return;
-      const angle = marginToAngle(-margin);  // note: negative because Keiko=positive margin=left
+      const angle = marginToAngle(-margin, _SCALE);  // note: negative because Keiko=positive margin=left
       const [ax, ay] = angleToSVG(angle);
       const barH = (count/maxCount)*HIST_H;
       const inner = Math.max(R - barH, 80);
@@ -561,13 +566,13 @@ function drawArcAndLabels(fc) {
   if (fc?.results) {
     const r = fc.results;
     // 95% CI arc band
-    const ci95path = arcBand(r.ci_95_lo, r.ci_95_hi, R-2, R+2);
+    const ci95path = arcBand(r.ci_95_lo, r.ci_95_hi, R-2, R+2, _SCALE);
     const ci95el = document.createElementNS('http://www.w3.org/2000/svg','path');
     ci95el.setAttribute('d', ci95path);
     ci95el.setAttribute('fill', '#888'); ci95el.setAttribute('opacity','0.15');
     ciG.appendChild(ci95el);
     // 80% CI arc band
-    const ci80path = arcBand(r.ci_80_lo, r.ci_80_hi, R-3, R+3);
+    const ci80path = arcBand(r.ci_80_lo, r.ci_80_hi, R-3, R+3, _SCALE);
     const ci80el = document.createElementNS('http://www.w3.org/2000/svg','path');
     ci80el.setAttribute('d', ci80path);
     ci80el.setAttribute('fill', '#888'); ci80el.setAttribute('opacity','0.25');
@@ -577,9 +582,11 @@ function drawArcAndLabels(fc) {
   // Margin tick labels on arc
   const arcLblG = id('arc-labels');
   arcLblG.innerHTML = '';
-  const tickMargins = [-300000,-200000,-100000,0,100000,200000,300000];
+  const tickStep = _SCALE <= 300000 ? 100000 : _SCALE <= 600000 ? 200000 : 300000;
+  const tickMargins = [];
+  for (let v = -_SCALE; v <= _SCALE; v += tickStep) tickMargins.push(v);
   tickMargins.forEach(m => {
-    const angle = marginToAngle(-m);
+    const angle = marginToAngle(-m, _SCALE);
     if (Math.abs(angle) > Math.PI/2 * 0.98) return;
     const [ax,ay] = angleToSVG(angle);
     const labelR = R + 16;
@@ -605,7 +612,7 @@ function drawArcAndLabels(fc) {
   // Needle (points to projected margin)
   if (fc?.results) {
     const proj = fc.results.proj_margin || 0;
-    const angle = marginToAngle(-proj);
+    const angle = marginToAngle(-proj, _SCALE);
     const [nx,ny] = angleToSVG(angle);
     const needleLine = id('needle-line');
     needleLine.setAttribute('x1', CX.toString());
@@ -617,11 +624,11 @@ function drawArcAndLabels(fc) {
   }
 }
 
-function arcBand(marginLo, marginHi, rInner, rOuter) {
+function arcBand(marginLo, marginHi, rInner, rOuter, _SCALE) {
   // Draw an arc band between two margins
   if (marginLo == null || marginHi == null) return '';
-  const aLo = marginToAngle(-marginHi);  // note flipped
-  const aHi = marginToAngle(-marginLo);
+  const aLo = marginToAngle(-marginHi, _SCALE);  // note flipped
+  const aHi = marginToAngle(-marginLo, _SCALE);
   if (Math.abs(aLo - aHi) < 0.001) return '';
   const steps = 40;
   let d = '';
