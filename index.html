@@ -185,7 +185,7 @@ tr:hover td { background: var(--bg); }
 <div class="panel active" id="panel-pronostico">
 <div class="card fc-w">
   <div class="card-t">Pronóstico Electoral</div>
-  <div class="card-s">BASADO EN MESAS CONTABILIZADAS · SE ACTUALIZA EN TIEMPO REAL</div>
+  <div class="card-s">MODELO JERÁRQUICO BAYESIANO · DATOS A NIVEL DE MESA DE VOTACIÓN · R1 2026 + SV 2021 + RESULTADOS EN VIVO</div>
 
   <div class="fc-top">
     <div class="fc-l">
@@ -230,7 +230,7 @@ tr:hover td { background: var(--bg); }
       <!-- Margin labels on arc -->
       <g id="arc-labels"></g>
       <!-- Forecast range label -->
-      <text id="fc-range-lbl" x="300" y="30" text-anchor="middle" font-family="system-ui" font-size="9" fill="#6b6b67">Rango de estimaciones</text>
+      <text id="fc-range-lbl" x="300" y="16" text-anchor="middle" font-family="system-ui" font-size="9" fill="#6b6b67">Rango de estimaciones</text>
     </svg>
   </div>
 
@@ -274,7 +274,6 @@ tr:hover td { background: var(--bg); }
     <div class="map-sb">
       <div class="ms-t" id="sb-t">Leyenda</div>
       <div id="sb-l"></div>
-      <div style="margin-top:9px"><div class="ms-t">Top distritos</div><div id="sb-top"></div></div>
     </div>
   </div>
   <div id="tt"></div>
@@ -315,24 +314,25 @@ tr:hover td { background: var(--bg); }
 
   <h4>Datos utilizados</h4>
   <ul>
-    <li><b>R1 2026 (nivel de mesa):</b> Votos por partido en las 92,766 mesas. Sabemos la composición exacta del electorado de cada mesa.</li>
-    <li><b>R2 2026 en vivo:</b> Resultados de la segunda vuelta conforme llegan. Cada mesa contabilizada calibra el modelo.</li>
-    <li><b>R2 2021 (nivel de mesa, 93% de cobertura):</b> Castillo vs. Keiko por mesa. Es el mejor predictor individual: para cada mesa no contabilizada, sabemos qué pasó allí hace 5 años.</li>
+    <li><b>R1 2026 (nivel de mesa):</b> Votos por partido en las 92,766 mesas. Sabemos la composición exacta del electorado de cada mesa — cuántos votaron por Fuerza Popular, Juntos por el Perú, Renovación Popular, etc.</li>
+    <li><b>R2 2026 en vivo (nivel de mesa):</b> Resultados de la segunda vuelta conforme llegan. Cada mesa contabilizada calibra el modelo en tiempo real.</li>
+    <li><b>R2 2021 (nivel de mesa, 93% de cobertura):</b> Castillo vs. Keiko por mesa. Es el mejor predictor individual: para cada mesa no contabilizada, sabemos qué pasó allí hace 5 años. El swing nacional observado en 2026 se aplica como corrección.</li>
   </ul>
 
   <h4>Predicción por mesa</h4>
   <ul>
-    <li><b>Nivel 1 — Distrito:</b> Si el distrito ya tiene resultados R2, usamos ese promedio + corrección R1.</li>
+    <li><b>Nivel 1 — Distrito:</b> Si el distrito ya tiene resultados R2, usamos ese promedio + corrección R1 (OLS dentro del distrito).</li>
     <li><b>Nivel 2 — Provincia:</b> Si no hay datos del distrito, usamos el promedio provincial + corrección R1.</li>
     <li><b>Nivel 3 — Departamento:</b> Análogo.</li>
-    <li><b>Nivel 4 — 2021 + swing:</b> Si no hay datos del área, usamos el resultado de 2021 en esa mesa ajustado por el swing nacional observado en 2026.</li>
+    <li><b>Nivel 4 — 2021 + swing:</b> Si no hay datos del área, usamos el resultado de 2021 en esa mesa ajustado por el swing nacional observado en 2026. Este nivel tiene 93% de cobertura a nivel de mesa.</li>
   </ul>
+  <p>En todos los niveles, los resultados de R1 de cada mesa sirven como corrector adicional mediante OLS, reduciendo la incertidumbre cuando las mesas reportadas en el área tienen una composición R1 diferente a las no reportadas.</p>
 
   <h4>Incertidumbre</h4>
   <p>Cada mesa recibe un σ según el nivel usado, calibrado con variación histórica de 2021: ~6 votos/mesa (distrito), ~11 votos/mesa (provincia), ~15 votos/mesa (departamento), ~28 votos/mesa (nacional). Las mesas del mismo grupo comparten el mismo error sistemático — si nos equivocamos en un distrito, nos equivocamos en todas sus mesas no contabilizadas. Esto produce intervalos de confianza realistas: amplios al inicio del escrutinio, estrechos al final. El gráfico de aguja muestra la escala dinámica según el IC 95% actual.</p>
 
   <h4>Flujo de votos</h4>
-  <p>Regresión OLS pura a nivel de mesa: <code>keiko_r2(t) = β₀ + β₁·fp_r1(t) + β₂·jpp_r1(t) + …</code> Cada observación es una mesa. Los coeficientes estiman el flujo marginal de cada partido R1 hacia cada destino R2. Bootstrap 200 iteraciones para intervalos de confianza.</p>
+  <p>Regresión OLS pura a nivel de mesa: <code>keiko_r2(t) = β₀ + β₁·fp_r1(t) + β₂·jpp_r1(t) + …</code>. Cada observación es una mesa de votación. Los coeficientes estiman el flujo marginal de cada partido R1 hacia cada destino R2. Se incluyen como regresores todos los partidos R1, blancos, nulos y ausentes — los 7 principales se muestran, el resto controla el modelo. Bootstrap 200 iteraciones para intervalos de confianza.</p>
 
   <h4>Limitaciones</h4>
   <ul>
@@ -440,18 +440,7 @@ async function loadFlows() {
 
 const SVG_W = 600, SVG_H = 260;
 const CX = 300, CY = 240, R = 210;  // arc center and radius
-
-// MARGIN_SCALE is dynamic — set from forecast CI each render
-let MARGIN_SCALE = 400000;
-
-function updateMarginScale(fc) {
-  if (!fc?.results) { MARGIN_SCALE = 400000; return; }
-  const r = fc.results;
-  const ciMax = Math.max(Math.abs(r.ci_95_lo || 0), Math.abs(r.ci_95_hi || 0));
-  // Scale = max(200k, CI extreme) rounded up to nearest 100k
-  const raw = Math.max(200000, ciMax);
-  MARGIN_SCALE = Math.ceil(raw / 100000) * 100000;
-}
+const MARGIN_SCALE = 400000;  // total votes range for the arc (±400k)
 
 function marginToAngle(margin) {
   // margin: negative = Sanchez, positive = Keiko
@@ -523,9 +512,6 @@ function renderNeedle() {
 function drawArcAndLabels(fc) {
   const svg = id('needle-svg');
 
-  // Update scale from CI before drawing anything
-  updateMarginScale(fc);
-
   // Draw arc background
   const arcSteps = 200;
   let arcPath = '';
@@ -585,12 +571,10 @@ function drawArcAndLabels(fc) {
     ciG.appendChild(ci80el);
   }
 
-  // Margin tick labels on arc — dynamic based on current scale
+  // Margin tick labels on arc
   const arcLblG = id('arc-labels');
   arcLblG.innerHTML = '';
-  const step = MARGIN_SCALE <= 300000 ? 100000 : MARGIN_SCALE <= 600000 ? 200000 : 300000;
-  const tickMargins = [];
-  for (let v = -MARGIN_SCALE; v <= MARGIN_SCALE; v += step) tickMargins.push(v);
+  const tickMargins = [-300000,-200000,-100000,0,100000,200000,300000];
   tickMargins.forEach(m => {
     const angle = marginToAngle(-m);
     if (Math.abs(angle) > Math.PI/2 * 0.98) return;
@@ -832,13 +816,25 @@ function renderFlujo(){
   id('mg-nd').style.display=fl?'none':'';
   const container=id('flujo-rows');
   if(!fl){container.innerHTML='';return;}
-  const DEST_LABELS=['keiko','sanchez','blanco','nulo','no_vota'];
-  const DEST_NAMES=['Keiko','Sánchez','Blanco','Nulo','No vota'];
-  const DEST_COLORS=[CK,CS,'#b0a898','#888','#ccc'];
-  container.innerHTML=fl.parties.map(p=>`
-    <div class="flujo-party">
+  // Use destinations from flows.json (may include or exclude ausentes)
+  const DEST_LABELS=fl.destinations||['keiko','sanchez','blanco','nulo','ausentes'];
+  const DEST_NAMES=fl.dest_names||['Keiko','Sánchez','Blanco','Nulo','Ausentes'];
+  const DEST_COLORS=fl.dest_colors||[CK,CS,'#b0a898','#888','#ccc'];
+  // Override party colors with correct ones
+  const PARTY_COLORS_MAP={
+    'fp':    CK,
+    'jpp':   CS,
+    'rla':   '#4cc2f8',
+    'nieto': '#f5a62e',
+    'obras': '#319972',
+    'ppt':   '#cb7727',
+    'an':    '#ea5954',
+  };
+  container.innerHTML=fl.parties.map(p=>{
+    const color=PARTY_COLORS_MAP[p.party]||p.color||'#888';
+    return`<div class="flujo-party">
       <div class="fp-hdr">
-        <div class="fp-dot" style="background:${p.color}"></div>
+        <div class="fp-dot" style="background:${color}"></div>
         <div class="fp-nm">${p.name}</div>
       </div>
       <div class="fp-flows">
@@ -848,11 +844,10 @@ function renderFlujo(){
           <div class="fp-flow-lbl" style="color:${DEST_COLORS[i]}">${DEST_NAMES[i]}</div>
         </div>`;}).join('')}
       </div>
-    </div>`).join('');
-  // Note
+    </div>`;}).join('');
   const note=document.createElement('div');
   note.style.cssText='font-size:9px;color:var(--faint);text-align:center;margin:6px 0 2px';
-  note.textContent=`Basado en ${fmt(fl.meta?.n_tables||0)} mesas contabilizadas en ${fl.meta?.n_districts||0} distritos · ${fl.meta?.n_bootstrap||0} iteraciones bootstrap`;
+  note.textContent=`Basado en ${fmt(fl.meta?.n_tables||0)} mesas contabilizadas · ${fl.meta?.n_bootstrap||0} iteraciones bootstrap`;
   container.appendChild(note);
 }
 
@@ -861,7 +856,7 @@ function updateDepts(){
   if(!S.lByU||!S.lByU.size||!S.r1)return;
   const depts={};
   for(const[u,r]of S.r1){const dept=r.r||'Desconocido';if(!depts[dept])depts[dept]={name:dept,r1tm:0,lk:0,ls:0,lm:0};depts[dept].r1tm+=r.tm;const ld=S.lByU.get(u);if(ld){depts[dept].lk+=ld.k||0;depts[dept].ls+=ld.s||0;depts[dept].lm+=ld.cm||0;}}
-  const rows=Object.values(depts).filter(r=>(r.lk+r.ls)>0).sort((a,b)=>{const ta=a.lk+a.ls,tb=b.lk+b.ls;return (b.lk/tb)-(a.lk/ta);});
+  const rows=Object.values(depts).filter(r=>(r.lk+r.ls)>0).sort((a,b)=>{const ta=a.lk+a.ls,tb=b.lk+b.ls;return(b.lk/tb)-(a.lk/ta);});
   id('dept-tb').innerHTML=rows.map(r=>{const tv=r.lk+r.ls;if(!tv)return'';const kP=r.lk/tv*100,m=r.lk-r.ls,mP=m/tv*100,pR=r.r1tm>0?r.lm/r.r1tm*100:0;return`<tr><td style="font-weight:600">${r.name}</td><td><span style="color:${CK}">${kP.toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.lk)}</span></td><td><span style="color:${CS}">${(100-kP).toFixed(1)}%</span> <span style="color:var(--faint)">${fmt(r.ls)}</span></td><td style="color:${m>=0?CK:CS};font-weight:600">${m>=0?'+':''}${mP.toFixed(1)}%</td><td><div style="display:flex;align-items:center;gap:3px"><div style="flex:1;height:3px;background:var(--bg);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pR.toFixed(1)}%;background:#2d6a4f"></div></div>${pR.toFixed(0)}%</div></td><td style="color:var(--faint)">${fmt(r.lm)}/${fmt(r.r1tm)}</td></tr>`;}).join('');
 }
 
