@@ -37,9 +37,9 @@ PARTY_NAMES  = {'fp':'Fuerza Popular (Keiko Fujimori)','jpp':'Juntos por el Per�
 PARTY_COLORS = {'fp':'#f57b2d','jpp':'#48cb50','rla':'#1e3a8a',
                 'nieto':'#d97706','obras':'#7c3aed','ppt':'#0891b2','an':'#be185d'}
 SOURCE_PARTIES = list(PARTIES.values())
-DEST_LABELS    = ['keiko','sanchez','blanco','nulo','no_vota']
-DEST_NAMES     = ['Keiko','Sánchez','Blanco','Nulo','No vota']
-DEST_COLORS    = ['#f57b2d','#48cb50','#b0a898','#888888','#cccccc']
+DEST_LABELS    = ['keiko','sanchez','blanco','nulo']
+DEST_NAMES     = ['Keiko','Sánchez','Blanco','Nulo']
+DEST_COLORS    = ['#f57b2d','#48cb50','#b0a898','#888888']
 
 print("=" * 60)
 print("VOTE FLOWS MODEL — Segunda Vuelta Perú 2026")
@@ -165,13 +165,14 @@ if len(df) < 100:
     (DATA / 'flows.json').write_text(json.dumps({'error': 'insufficient_data'}, indent=2))
     exit()
 
-# ── R2 outcomes as shares of electores ───────────────────────────────────────
-df['el'] = df['electores'].clip(lower=50)
-df['to_keiko']   = (df['k_votes']  / df['el']).clip(0, 1)
-df['to_sanchez'] = (df['s_votes']  / df['el']).clip(0, 1)
-df['to_blanco']  = (df['blancos']  / df['el']).clip(0, 1)
-df['to_nulo']    = (df['nulos']    / df['el']).clip(0, 1)
-df['to_no_vota'] = np.clip(1 - df['ta_r2'] / df['el'], 0, 1)
+# ── R2 outcomes as shares of R2 VALID votes (k+s+b+n) ────────────────────────
+# This gives clean flows that sum to 1, with no abstention ambiguity.
+# β_fp_to_keiko = "for every 1pp more FP in R1, Keiko gets β_fp pp more in R2"
+df['tv_r2'] = (df['k_votes'] + df['s_votes'] + df['blancos'] + df['nulos']).clip(lower=1)
+df['to_keiko']   = (df['k_votes']  / df['tv_r2']).clip(0, 1)
+df['to_sanchez'] = (df['s_votes']  / df['tv_r2']).clip(0, 1)
+df['to_blanco']  = (df['blancos']  / df['tv_r2']).clip(0, 1)
+df['to_nulo']    = (df['nulos']    / df['tv_r2']).clip(0, 1)
 
 DESTS = [f'to_{d}' for d in DEST_LABELS]
 df = df.dropna(subset=SOURCES + DESTS)
@@ -242,26 +243,25 @@ flows_out = []
 for i, party in enumerate(SOURCE_PARTIES):
     row = {'party': party, 'name': PARTY_NAMES[party], 'color': PARTY_COLORS[party]}
 
-    # Counterfactual: party s = 1, all other top-7 = 0, controls at their means
-    x_party = x_base.copy(); x_party[i + 1] = 1.0
-    # Set controls to their mean values
-    for s, idx_c in ctrl_idx.items():
-        x_party[idx_c] = ctrl_means[s]
+    # Raw OLS coefficient for this party at each destination
+    # β_i_d = marginal effect on R2 share of d when R1 share of party i increases by 1
+    raw = np.array([float(main_coefs[dest][i + 1]) for dest in DESTS])
 
-    pred = np.array([float(x_party @ main_coefs[dest]) for dest in DESTS])
-    pred = np.clip(pred, 0, 1)
-    total = pred.sum()
-    flows = pred / total if total > 1e-10 else np.ones(len(DESTS)) / len(DESTS)
+    # Normalize across destinations so they sum to 1
+    # Shift to non-negative first (negative coefficients are possible but rare)
+    raw_pos = raw - raw.min()
+    total = raw_pos.sum()
+    flows = raw_pos / total if total > 1e-10 else np.ones(len(DESTS)) / len(DESTS)
 
     for j, (dest, label) in enumerate(zip(DESTS, DEST_LABELS)):
         row[f'to_{label}'] = round(float(flows[j]), 4)
-        boot_preds = [float(x_party @ boot[dest][b]) for b in range(N_BOOTSTRAP)]
-        row[f'ci_{label}_lo'] = round(float(np.percentile(boot_preds, 5)), 4)
-        row[f'ci_{label}_hi'] = round(float(np.percentile(boot_preds, 95)), 4)
+        boot_vals = [float(boot[dest][b][i + 1]) for b in range(N_BOOTSTRAP)]
+        row[f'ci_{label}_lo'] = round(float(np.percentile(boot_vals, 5)), 4)
+        row[f'ci_{label}_hi'] = round(float(np.percentile(boot_vals, 95)), 4)
 
     flows_out.append(row)
     print(f"  {party:8s}: K={row['to_keiko']:.2f} S={row['to_sanchez']:.2f} "
-          f"B={row['to_blanco']:.2f} N={row['to_nulo']:.2f} A={row['to_no_vota']:.2f}")
+          f"B={row['to_blanco']:.2f} N={row['to_nulo']:.2f}")
 
 (DATA / 'flows.json').write_text(json.dumps({
     "meta": {
